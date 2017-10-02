@@ -2,7 +2,7 @@
  *
  * \file
  *
- * \brief This module contains SAMD21 BSP APIs declarations.
+ * \brief Programmer APIs.
  *
  * Copyright (c) 2016-2017 Atmel Corporation. All rights reserved.
  *
@@ -39,15 +39,20 @@
  *
  */
 
-#ifndef _NM_BSP_SAMD21_H_
-#define _NM_BSP_SAMD21_H_
+#ifndef FIRMWARE_PROGRAMMER_APIS_H_INCLUDED
+#define FIRMWARE_PROGRAMMER_APIS_H_INCLUDED
 
-#include "conf_winc.h"
-#include "math.h"
+#include "common/include/nm_common.h"
+#include "programmer/programmer.h"
+#include "spi_flash/include/spi_flash_map.h"
 
-#define NM_EDGE_INTERRUPT		(1)
+#define programmer_write_cert_image(buff)   programmer_write((uint8*)buff, M2M_TLS_FLASH_ROOTCERT_CACHE_OFFSET, M2M_TLS_FLASH_ROOTCERT_CACHE_SIZE)
+#define programmer_read_cert_image(buff)    programmer_read((uint8*)buff, M2M_TLS_FLASH_ROOTCERT_CACHE_OFFSET, M2M_TLS_FLASH_ROOTCERT_CACHE_SIZE)
+#define programmer_erase_cert_image()       programmer_erase(M2M_TLS_FLASH_ROOTCERT_CACHE_OFFSET, M2M_TLS_FLASH_ROOTCERT_CACHE_SIZE)
 
-#define NM_DEBUG				CONF_WINC_DEBUG
-#define NM_BSP_PRINTF			CONF_WINC_PRINTF
+#define programmer_write_firmware_image(buff,offSet,sz) programmer_write((uint8*)buff, offSet, sz)
+#define programmer_read_firmware_image(buff,offSet,sz)  programmer_read((uint8*)buff, offSet, sz)
 
-#endif /* _NM_BSP_SAMD21_H_ */
+#define programmer_erase_all()               programmer_erase(0, programmer_get_flash_size())
+
+#endif /* FIRMWARE_PROGRAMMER_APIS_H_INCLUDED */
