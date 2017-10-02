@@ -2,7 +2,7 @@
  *
  * \file
  *
- * \brief This module contains SAMD21 BSP APIs declarations.
+ * \brief WINC1500 configuration.
  *
  * Copyright (c) 2016-2017 Atmel Corporation. All rights reserved.
  *
@@ -39,15 +39,34 @@
  *
  */
 
-#ifndef _NM_BSP_SAMD21_H_
-#define _NM_BSP_SAMD21_H_
+#ifndef CONF_WINC_H_INCLUDED
+#define CONF_WINC_H_INCLUDED
 
-#include "conf_winc.h"
-#include "math.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define NM_EDGE_INTERRUPT		(1)
+#include "board.h"
 
-#define NM_DEBUG				CONF_WINC_DEBUG
-#define NM_BSP_PRINTF			CONF_WINC_PRINTF
+/*
+   ---------------------------------
+   ---------- SPI settings ---------
+   ---------------------------------
+*/
+#define CONF_WINC_USE_SPI				(1)
 
-#endif /* _NM_BSP_SAMD21_H_ */
+/*
+   ---------------------------------
+   --------- Debug Options ---------
+   ---------------------------------
+*/
+#include "log.h"
+
+#define CONF_WINC_DEBUG					(1)
+#define CONF_WINC_PRINTF				LOG_DEBUG
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* CONF_WINC_H_INCLUDED */

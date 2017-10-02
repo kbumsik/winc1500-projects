@@ -2,7 +2,7 @@
  *
  * \file
  *
- * \brief WINC Peripherals Application Interface.
+ * \brief This module contains SAMD21 BSP APIs declarations.
  *
  * Copyright (c) 2016-2017 Atmel Corporation. All rights reserved.
  *
@@ -38,32 +38,15 @@
  * \asf_license_stop
  *
  */
- 
-#ifndef __PROGRAMMER_H__
-#define __PROGRAMMER_H__
 
-/**
-* Include
-*/
-#include "spi_flash/include/spi_flash_map.h"
-#include "spi_flash/include/spi_flash.h"
+#ifndef _NM_BSP_RIOT_H_
+#define _NM_BSP_RIOT_H_
 
+#include "conf_winc.h"
 
-#define ROOT_CERT_SIZE M2M_TLS_ROOTCER_FLASH_SIZE
+#define NM_EDGE_INTERRUPT		(1)
 
-#define	programmer_get_flash_size()						(((spi_flash_get_size()*1024)/8)*1024)
-#define	programmer_write(pu8Buf, u32Offset, u32Sz)		spi_flash_write(pu8Buf, u32Offset, u32Sz)
-#define	programmer_erase(u32Offset, u32Sz)				spi_flash_erase(u32Offset, u32Sz)
-#define	programmer_eraseall()							programmer_erase(0, programmer_get_flash_size())
-#define	programmer_read(pu8Buf, u32Offset, u32Sz)		spi_flash_read(pu8Buf, u32Offset, u32Sz)	
+#define NM_DEBUG				CONF_WINC_DEBUG
+#define NM_BSP_PRINTF			CONF_WINC_PRINTF
 
-
-#define programmer_write_root_cert(buff)				programmer_write((uint8*)buff, M2M_TLS_ROOTCER_FLASH_OFFSET, M2M_TLS_ROOTCER_FLASH_SIZE)
-#define programmer_read_root_cert(buff)					programmer_read((uint8*)buff, M2M_TLS_ROOTCER_FLASH_OFFSET, M2M_TLS_ROOTCER_FLASH_SIZE)
-#define programmer_erase_root_cert()					programmer_erase(M2M_TLS_ROOTCER_FLASH_OFFSET, M2M_TLS_ROOTCER_FLASH_SIZE)
-
-#define programmer_write_tls_cert_store(buff)			programmer_write((uint8*)buff, M2M_TLS_SERVER_FLASH_OFFSET, M2M_TLS_SERVER_FLASH_SIZE)
-#define programmer_read_tls_cert_store(buff)			programmer_read((uint8*)buff, M2M_TLS_SERVER_FLASH_OFFSET, M2M_TLS_SERVER_FLASH_SIZE)
-#define programmer_erase_tls_cert_store()				programmer_erase(M2M_TLS_SERVER_FLASH_OFFSET, M2M_TLS_SERVER_FLASH_SIZE)
-
-#endif /* __PROGRAMMER_H__ */
+#endif /* _NM_BSP_RIOT_H_ */
