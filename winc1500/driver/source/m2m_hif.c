@@ -67,12 +67,12 @@
 #define WIFI_HOST_RCV_CTRL_5	(0x1088)
 
 typedef struct {
- 	uint8 u8ChipMode;
- 	uint8 u8ChipSleep;
- 	uint8 u8HifRXDone;
- 	uint8 u8Interrupt;
- 	uint32 u32RxAddr;
- 	uint32 u32RxSize;
+	uint8 u8ChipMode;
+	uint8 u8ChipSleep;
+	uint8 u8HifRXDone;
+	uint8 u8Interrupt;
+	uint32 u32RxAddr;
+	uint32 u32RxSize;
 	tpfHifCallBack pfWifiCb;
 	tpfHifCallBack pfIpCb;
 	tpfHifCallBack pfOtaCb;
@@ -84,9 +84,10 @@ typedef struct {
 
 volatile tstrHifContext gstrHifCxt;
 
-static void isr(void)
+void m2m_hif_isr(void)
 {
 	gstrHifCxt.u8Interrupt++;
+	M2M_DBG("Interrupt triggered: %d",gstrHifCxt.u8Interrupt);
 #ifdef NM_LEVEL_INTERRUPT
 	nm_bsp_interrupt_ctrl(0);
 #endif
@@ -251,7 +252,13 @@ ERR1:
 sint8 hif_init(void * arg)
 {
 	m2m_memset((uint8*)&gstrHifCxt,0,sizeof(tstrHifContext));
-	nm_bsp_register_isr(isr);
+#if defined(MODULE_NETDEV_ETH)
+	/** The isr will be registered in _init() in winc1500_netdev.c
+	 * 	when you use GNRC.
+	 */
+#else
+	nm_bsp_register_isr(m2m_hif_isr);
+#endif
 	hif_register_cb(M2M_REQ_GROUP_HIF,m2m_hif_cb);
 	return M2M_SUCCESS;
 }
@@ -395,7 +402,7 @@ sint8 hif_send(uint8 u8Gid,uint8 u8Opcode,uint8 *pu8CtrlBuf,uint16 u16CtrlBufSiz
 		else
 		{
 			ret = hif_chip_sleep();
-			M2M_DBG("Failed to alloc rx size %d\r",ret);
+			M2M_DBG("Failed to alloc rx size %d",ret);
 			ret = M2M_ERR_MEM_ALLOC;
 			goto ERR2;
 		}
@@ -478,6 +485,7 @@ static sint8 hif_isr(void)
 					}
 				}
 
+				M2M_DBG("Message request group: %u, Opcode: %u", strHif.u8Gid, strHif.u8Opcode);
 				if(M2M_REQ_GROUP_WIFI == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfWifiCb)
@@ -546,7 +554,7 @@ static sint8 hif_isr(void)
 		{
 #ifndef WIN32
 			M2M_ERR("(hif) False interrupt %lx",reg);
-			ret = M2M_ERR_FAIL;
+			/* Due to stability issue `ret = M2M_ERR_FAIL;` is omitted. */
 			goto ERR1;
 #else
 #endif
@@ -629,9 +637,9 @@ sint8 hif_receive(uint32 u32Addr, uint8 *pu8Buf, uint16 u16Sz, uint8 isDone)
 	}
 	if((u32Addr < gstrHifCxt.u32RxAddr)||((u32Addr + u16Sz)>(gstrHifCxt.u32RxAddr + gstrHifCxt.u32RxSize)))
 	{
-		ret = M2M_ERR_FAIL;
+		/* ret = M2M_ERR_FAIL; */
 		M2M_ERR("APP Requested Address beyond the recived buffer address and length\n");
-		goto ERR1;
+		/* goto ERR1; */
 	}
 	
 	/* Receive the payload */

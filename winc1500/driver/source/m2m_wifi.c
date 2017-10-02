@@ -44,7 +44,8 @@
 #include "driver/source/nmasic.h"
 
 static volatile uint8 gu8ChNum;
-static volatile uint8 gu8scanInProgress = 0;
+/* This will be used globally in winc1500_callback.c */
+volatile uint8_t gu8scanInProgress = 0;
 static tpfAppWifiCb gpfAppWifiCb = NULL;
 
 
@@ -81,6 +82,8 @@ gstrMgmtCtrl = {NULL, 0 , 0};
 *	@date
 *	@version	1.0
 */
+/* RIOT implements its own wifi callback */
+#ifndef MODULE_WINC1500
 static void m2m_wifi_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
 	uint8 rx_buf[8];
@@ -292,8 +295,9 @@ static void m2m_wifi_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 		M2M_ERR("REQ Not defined %d\n",u8OpCode);
 	}
 }
+#endif
 
-sint8 m2m_wifi_download_mode()
+sint8 m2m_wifi_download_mode(void)
 {
 	sint8 ret = M2M_SUCCESS;
 	/* Apply device specific initialization. */
@@ -308,7 +312,7 @@ _EXIT0:
 	return ret;
 }
 
-static sint8 m2m_validate_ap_parameters(CONST tstrM2MAPConfig* pstrM2MAPConfig)
+static sint8 m2m_validate_ap_parameters(WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig)
 {
 	sint8 s8Ret = M2M_SUCCESS;
 	/* Check for incoming pointer */
@@ -473,8 +477,8 @@ sint8 m2m_wifi_init(tstrWifiInitParam * param)
 	ret = hif_init(NULL);
 	if(ret != M2M_SUCCESS) 	goto _EXIT1;
 
-	hif_register_cb(M2M_REQ_GROUP_WIFI,m2m_wifi_cb);
-
+	/* This will be called in RIOT's driver */
+	/* hif_register_cb(M2M_REQ_GROUP_WIFI,m2m_wifi_cb); */
 	ret = nm_get_firmware_full_info(&strtmp);
 
 	M2M_INFO("Firmware ver   : %u.%u.%u Svnrev %u\n", strtmp.u8FirmwareMajor, strtmp.u8FirmwareMinor, strtmp.u8FirmwarePatch,strtmp.u16FirmwareSvnNum);
@@ -909,7 +913,7 @@ sint8 m2m_wifi_p2p_disconnect(void)
 	ret = hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_DISABLE_P2P, NULL, 0, NULL, 0, 0);
 	return ret;
 }
-sint8 m2m_wifi_enable_ap(CONST tstrM2MAPConfig* pstrM2MAPConfig)
+sint8 m2m_wifi_enable_ap(WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig)
 {
 	sint8 ret = M2M_ERR_FAIL;
 	if(M2M_SUCCESS == m2m_validate_ap_parameters(pstrM2MAPConfig))
@@ -1379,7 +1383,7 @@ NMI_API sint8 m2m_wifi_enable_mac_mcast(uint8* pu8MulticastMacAddress, uint8 u8A
 	{
 		strMulticastMac.u8AddRemove = u8AddRemove;
 		m2m_memcpy(strMulticastMac.au8macaddress,pu8MulticastMacAddress,M2M_MAC_ADDRES_LEN);
-		M2M_DBG("mac multicast: %x:%x:%x:%x:%x:%x\r\n",strMulticastMac.au8macaddress[0],strMulticastMac.au8macaddress[1],strMulticastMac.au8macaddress[2],strMulticastMac.au8macaddress[3],strMulticastMac.au8macaddress[4],strMulticastMac.au8macaddress[5]);
+		M2M_DBG("mac multicast: %x:%x:%x:%x:%x:%x\n",strMulticastMac.au8macaddress[0],strMulticastMac.au8macaddress[1],strMulticastMac.au8macaddress[2],strMulticastMac.au8macaddress[3],strMulticastMac.au8macaddress[4],strMulticastMac.au8macaddress[5]);
 		s8ret = hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_SET_MAC_MCAST, (uint8 *)&strMulticastMac,sizeof(tstrM2MMulticastMac),NULL,0,0);
 	}
 
@@ -1413,7 +1417,7 @@ NMI_API sint8  m2m_wifi_set_receive_buffer(void* pvBuffer,uint16 u16BufferLen)
 	else
 	{
 		s8ret = M2M_ERR_FAIL;
-		M2M_ERR("Buffer NULL pointer\r\n");
+		M2M_ERR("Buffer NULL pointer\n");
 	}
 	return s8ret;
 }

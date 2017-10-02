@@ -91,6 +91,10 @@ typedef struct
 */
 typedef void (*tpfHifCallBack)(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr);
 /**
+ * @brief	Wi-Fi module interrupt service routine.
+ */
+void m2m_hif_isr(void);
+/**
 *   @fn			NMI_API sint8 hif_init(void * arg);
 *   @brief
 				To initialize HIF layer.

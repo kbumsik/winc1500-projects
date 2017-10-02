@@ -79,7 +79,7 @@ sint8 nm_get_firmware_info(tstrM2mRev* M2mRev)
 	M2mRev->u8FirmwarePatch = M2M_GET_FW_PATCH(reg);
 	M2mRev->u32Chipid	= nmi_get_chipid();
 	M2mRev->u16FirmwareSvnNum = 0;
-	
+
 	curr_firm_ver   = M2M_MAKE_VERSION(M2mRev->u8FirmwareMajor, M2mRev->u8FirmwareMinor,M2mRev->u8FirmwarePatch);
 	curr_drv_ver    = M2M_MAKE_VERSION(M2M_RELEASE_VERSION_MAJOR_NO, M2M_RELEASE_VERSION_MINOR_NO, M2M_RELEASE_VERSION_PATCH_NO);
 	min_req_drv_ver = M2M_MAKE_VERSION(M2mRev->u8DriverMajor, M2mRev->u8DriverMinor,M2mRev->u8DriverPatch);
@@ -88,7 +88,10 @@ sint8 nm_get_firmware_info(tstrM2mRev* M2mRev)
 		than the min driver that the current firmware support  */
 		ret = M2M_ERR_FW_VER_MISMATCH;
 	}
-	if(curr_drv_ver >  curr_firm_ver) {
+	/* To avoid version mismatch error. */
+	/* Current driver is 19.5.2 */
+	uint16 curr_min_drv_ver = M2M_MAKE_VERSION(19, 4, 4);
+	if(curr_min_drv_ver >  curr_firm_ver) {
 		/*The current driver should be equal or less than the firmware version*/
 		ret = M2M_ERR_FW_VER_MISMATCH;
 	}
@@ -138,7 +141,8 @@ sint8 nm_get_firmware_full_info(tstrM2mRev* pstrRev)
 								ret = M2M_ERR_FW_VER_MISMATCH;
 								goto EXIT;
 							}
-							if(curr_drv_ver >  curr_firm_ver) {
+							uint16 curr_min_drv_ver = M2M_MAKE_VERSION(19, 4, 4);
+							if(curr_min_drv_ver >  curr_firm_ver) {
 								/*The current driver should be equal or less than the firmware version*/
 								ret = M2M_ERR_FW_VER_MISMATCH;
 								goto EXIT;
@@ -233,7 +237,7 @@ EXIT:
 *	@date	10 Oct 2014
 *	@version	1.0
 */
-sint8 nm_drv_init_download_mode()
+sint8 nm_drv_init_download_mode(void)
 {
 	sint8 ret = M2M_SUCCESS;
 
