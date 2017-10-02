@@ -39,17 +39,27 @@
  *
  */
 
+#include "board.h"
+#include "periph/gpio.h"
+#include "xtimer.h"
+
 #include "bsp/include/nm_bsp.h"
 #include "common/include/nm_common.h"
-#include "asf.h"
+
+#include "winc1500.h"
+#include "winc1500_internal.h"
 #include "conf_winc.h"
 
 static tpfNmBspIsr gpfIsr;
 
-static void chip_isr(void)
+static void chip_isr(void *args)
 {
 	if (gpfIsr) {
+#if	defined(MODULE_WINC1500) && defined(MODULE_NETDEV_ETH)
+		gpfIsr(args);
+#else
 		gpfIsr();
+#endif
 	}
 }
 
@@ -59,17 +69,21 @@ static void chip_isr(void)
  */
 static void init_chip_pins(void)
 {
-	struct port_config pin_conf;
+    winc1500_t *dev = &winc1500;
+	/* Configure INTN pins as input. */ // TODO: Delete?
+	gpio_init(dev->params.int_pin, GPIO_IN);
 
-	port_get_config_defaults(&pin_conf);
+	/* Configure RESETN pin as output. */
+	gpio_init(dev->params.reset_pin, GPIO_OUT);
+	gpio_clear(dev->params.reset_pin);
 
-	/* Configure control pins as output. */
-	pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
-	port_pin_set_config(CONF_WINC_PIN_RESET, &pin_conf);
-	port_pin_set_config(CONF_WINC_PIN_CHIP_ENABLE, &pin_conf);
-	port_pin_set_config(CONF_WINC_PIN_WAKE, &pin_conf);
-	port_pin_set_output_level(CONF_WINC_PIN_CHIP_ENABLE, false);
-	port_pin_set_output_level(CONF_WINC_PIN_RESET, false);
+	/* Configure CHIP_EN as output */
+	gpio_init(dev->params.wake_pin, GPIO_OUT);
+
+	/* Configure CHIP_EN as output */
+	if (dev->params.en_pin != GPIO_UNDEF) {
+		gpio_init(dev->params.en_pin, GPIO_OUT); // TODO: pulled up input?
+	}
 }
 
 /*
@@ -77,22 +91,15 @@ static void init_chip_pins(void)
  *	@brief	Initialize BSP
  *	@return	0 in case of success and -1 in case of failure
  */
-sint8 nm_bsp_init(void)
+int8_t nm_bsp_init(void)
 {
 	gpfIsr = NULL;
 
 	/* Initialize chip IOs. */
 	init_chip_pins();
 
-    /* Make sure a 1ms Systick is configured. */
-    if (!(SysTick->CTRL & SysTick_CTRL_ENABLE_Msk && SysTick->CTRL & SysTick_CTRL_TICKINT_Msk)) {
-	    delay_init();
-    }
-
 	/* Perform chip reset. */
 	nm_bsp_reset();
-
-	system_interrupt_enable_global();
 
 	return M2M_SUCCESS;
 }
@@ -102,16 +109,17 @@ sint8 nm_bsp_init(void)
  *	@brief	De-iInitialize BSP
  *	@return	0 in case of success and -1 in case of failure
  */
-sint8 nm_bsp_deinit(void)
+int8_t nm_bsp_deinit(void)
 {
-	struct port_config pin_conf;
-	port_get_config_defaults(&pin_conf);
+    winc1500_t *dev = &winc1500;
 	/* Configure control pins as input no pull up. */
-	pin_conf.direction  = PORT_PIN_DIR_INPUT;
-	pin_conf.input_pull = PORT_PIN_PULL_NONE;
-	port_pin_set_output_level(CONF_WINC_PIN_CHIP_ENABLE, false);
-	port_pin_set_output_level(CONF_WINC_PIN_RESET, false);
-	port_pin_set_config(CONF_WINC_SPI_INT_PIN, &pin_conf);
+	gpio_clear(dev->params.reset_pin);
+	gpio_init(dev->params.reset_pin, GPIO_IN);
+	if (dev->params.en_pin != GPIO_UNDEF) {
+		gpio_clear(dev->params.en_pin);
+		gpio_init(dev->params.en_pin, GPIO_IN);
+	}
+
 	return M2M_SUCCESS;
 }
 
@@ -122,12 +130,17 @@ sint8 nm_bsp_deinit(void)
  */
 void nm_bsp_reset(void)
 {
-	port_pin_set_output_level(CONF_WINC_PIN_CHIP_ENABLE, false);
-	port_pin_set_output_level(CONF_WINC_PIN_RESET, false);
+    winc1500_t *dev = &winc1500;
+	if (dev->params.en_pin != GPIO_UNDEF) {
+		gpio_clear(dev->params.en_pin);
+	}
+	gpio_clear(dev->params.reset_pin);
 	nm_bsp_sleep(100);
-	port_pin_set_output_level(CONF_WINC_PIN_CHIP_ENABLE, true);
+	if (dev->params.en_pin != GPIO_UNDEF) {
+		gpio_set(dev->params.en_pin);
+	}
 	nm_bsp_sleep(100);
-	port_pin_set_output_level(CONF_WINC_PIN_RESET, true);
+	gpio_set(dev->params.reset_pin);
 	nm_bsp_sleep(100);
 }
 
@@ -137,10 +150,10 @@ void nm_bsp_reset(void)
  *	@param[IN]	u32TimeMsec
  *				Time in milliseconds
  */
-void nm_bsp_sleep(uint32 u32TimeMsec)
+void nm_bsp_sleep(uint32_t u32TimeMsec)
 {
 	while (u32TimeMsec--) {
-		delay_ms(1);
+		xtimer_usleep(1);
 	}
 }
 
@@ -152,21 +165,9 @@ void nm_bsp_sleep(uint32 u32TimeMsec)
  */
 void nm_bsp_register_isr(tpfNmBspIsr pfIsr)
 {
-	struct extint_chan_conf config_extint_chan;
-
+    winc1500_t *dev = &winc1500;
 	gpfIsr = pfIsr;
-
-	extint_chan_get_config_defaults(&config_extint_chan);
-	config_extint_chan.gpio_pin = CONF_WINC_SPI_INT_PIN;
-	config_extint_chan.gpio_pin_mux = CONF_WINC_SPI_INT_MUX;
-	config_extint_chan.gpio_pin_pull = EXTINT_PULL_UP;
-	config_extint_chan.detection_criteria = EXTINT_DETECT_FALLING;
-
-	extint_chan_set_config(CONF_WINC_SPI_INT_EIC, &config_extint_chan);
-	extint_register_callback(chip_isr, CONF_WINC_SPI_INT_EIC,
-			EXTINT_CALLBACK_TYPE_DETECT);
-	extint_chan_enable_callback(CONF_WINC_SPI_INT_EIC,
-			EXTINT_CALLBACK_TYPE_DETECT);
+	gpio_init_int(dev->params.int_pin, GPIO_IN, GPIO_FALLING, chip_isr, dev);
 }
 
 /*
@@ -175,13 +176,12 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr)
  *	@param[IN]	u8Enable
  *				'0' disable interrupts. '1' enable interrupts
  */
-void nm_bsp_interrupt_ctrl(uint8 u8Enable)
+void nm_bsp_interrupt_ctrl(uint8_t u8Enable)
 {
+    winc1500_t *dev = &winc1500;
 	if (u8Enable) {
-		extint_chan_enable_callback(CONF_WINC_SPI_INT_EIC,
-				EXTINT_CALLBACK_TYPE_DETECT);
+		gpio_irq_enable(dev->params.int_pin);
 	} else {
-		extint_chan_disable_callback(CONF_WINC_SPI_INT_EIC,
-				EXTINT_CALLBACK_TYPE_DETECT);
+		gpio_irq_disable(dev->params.int_pin);
 	}
 }

@@ -2,9 +2,9 @@
  *
  * \file
  *
- * \brief This module contains NMC1500 BSP APIs declarations.
+ * \brief This module contains RIOT BSP APIs declarations.
  *
- * Copyright (c) 2016 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2016-2017 Atmel Corporation. All rights reserved.
  *
  * \asf_license_start
  *
@@ -38,13 +38,15 @@
  * \asf_license_stop
  *
  */
-/**@defgroup  BSPDefine Defines
- * @ingroup nm_bsp
- * @{
- */
-#ifndef _NM_BSP_INTERNAL_H_
-#define _NM_BSP_INTERNAL_H_
 
-#include "nm_bsp_riot.h"
+#ifndef _NM_BSP_RIOT_H_
+#define _NM_BSP_RIOT_H_
 
-#endif //_NM_BSP_INTERNAL_H_
+#include "conf_winc.h"
+
+#define NM_EDGE_INTERRUPT		(1)
+
+#define NM_DEBUG				CONF_WINC_DEBUG
+#define NM_BSP_PRINTF			CONF_WINC_PRINTF
+
+#endif /* _NM_BSP_RIOT_H_ */

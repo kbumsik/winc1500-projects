@@ -1485,7 +1485,7 @@ NMI_API sint8 m2m_wifi_p2p_disconnect(void);
 @endcode
 
 */
-NMI_API sint8 m2m_wifi_enable_ap(CONST tstrM2MAPConfig* pstrM2MAPConfig);
+NMI_API sint8 m2m_wifi_enable_ap(WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig);
  /**@}*/
 /** @defgroup WifiDisableApFn m2m_wifi_disable_ap
  *   @ingroup WLANAPI
