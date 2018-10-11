@@ -69,7 +69,7 @@ static int8_t spi_rw(uint8_t* pu8Mosi, uint8_t* pu8Miso, uint16_t u16Sz)
 	if (((pu8Miso == NULL) && (pu8Mosi == NULL)) ||(u16Sz == 0)) {
 		return M2M_ERR_INVALID_ARG;
 	}
-
+	
 	/* Enable/Disable in/out operations */
 	if (pu8Mosi == NULL) {
 		pu8Mosi = &u8Dummy;
@@ -106,6 +106,8 @@ static int8_t spi_rw(uint8_t* pu8Mosi, uint8_t* pu8Miso, uint16_t u16Sz)
 */
 int8_t nm_bus_init(void *pvinit)
 {
+	(void)pvinit;
+
     winc1500_t *dev = &winc1500;
 	int8_t result = M2M_SUCCESS;
 
@@ -173,5 +175,7 @@ int8_t nm_bus_deinit(void)
 */
 int8_t nm_bus_reinit(void* config)
 {
+	(void)config;
+	
 	return M2M_SUCCESS;
 }

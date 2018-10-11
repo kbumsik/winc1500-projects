@@ -131,6 +131,9 @@ ERR1:
 */
 static void m2m_hif_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
+	(void)u8OpCode;
+	(void)u16DataSize;
+	(void)u32Addr;
 
 
 }
@@ -251,6 +254,8 @@ ERR1:
 
 sint8 hif_init(void * arg)
 {
+	(void)arg;
+
 	m2m_memset((uint8*)&gstrHifCxt,0,sizeof(tstrHifContext));
 #if defined(MODULE_NETDEV_ETH)
 	/** The isr will be registered in _init() in winc1500_netdev.c
@@ -271,6 +276,8 @@ sint8 hif_init(void * arg)
 */
 sint8 hif_deinit(void * arg)
 {
+	(void)arg;
+
 	sint8 ret = M2M_SUCCESS;
 	ret = hif_chip_wake();
 	m2m_memset((uint8*)&gstrHifCxt,0,sizeof(tstrHifContext));

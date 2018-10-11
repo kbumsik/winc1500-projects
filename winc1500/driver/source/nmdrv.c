@@ -361,6 +361,8 @@ ERR1:
 */
 sint8 nm_drv_deinit(void * arg)
 {
+	(void)arg;
+	
 	sint8 ret;
 
 	ret = chip_deinit();

@@ -58,6 +58,8 @@ static void chip_isr(void *args)
 #if	defined(MODULE_WINC1500) && defined(MODULE_NETDEV_ETH)
 		gpfIsr(args);
 #else
+		(void)args;
+
 		gpfIsr();
 #endif
 	}

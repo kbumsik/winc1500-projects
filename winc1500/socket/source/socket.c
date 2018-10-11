@@ -678,6 +678,9 @@ Date
 *********************************************************************/
 sint8 accept(SOCKET sock, struct sockaddr *addr, uint8 *addrlen)
 {
+	(void)addr;
+	(void)addrlen;
+
 	sint8	s8Ret = SOCK_ERR_INVALID_ARG;
 	
 	if(sock >= 0 && (gastrSockets[sock].bIsUsed == 1) )
@@ -748,6 +751,8 @@ Date
 *********************************************************************/
 sint16 send(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flags)
 {
+	(void)flags;
+
 	sint16	s16Ret = SOCK_ERR_INVALID_ARG;
 	
 	if((sock >= 0) && (pvSendBuffer != NULL) && (u16SendLength <= SOCKET_BUFFER_MAX_LENGTH) && (gastrSockets[sock].bIsUsed == 1))
@@ -800,6 +805,9 @@ Date
 *********************************************************************/
 sint16 sendto(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flags, struct sockaddr *pstrDestAddr, uint8 u8AddrLen)
 {
+	(void)flags;
+	(void)u8AddrLen;
+	
 	sint16	s16Ret = SOCK_ERR_INVALID_ARG;
 	
 	if((sock >= 0) && (pvSendBuffer != NULL) && (u16SendLength <= SOCKET_BUFFER_MAX_LENGTH) && (gastrSockets[sock].bIsUsed == 1))
@@ -1249,6 +1257,12 @@ Date
 *********************************************************************/
 sint8 getsockopt(SOCKET sock, uint8 u8Level, uint8 u8OptName, const void *pvOptValue, uint8* pu8OptLen)
 {
+	(void)sock;
+	(void)u8Level;
+	(void)u8OptName;
+	(void)pvOptValue;
+	(void)pu8OptLen;
+
 	/* TBD */
 	return M2M_SUCCESS;
 }

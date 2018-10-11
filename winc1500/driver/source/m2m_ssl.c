@@ -73,6 +73,8 @@ FUNCTION PROTOTYPES
 */
 static void m2m_ssl_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
+	(void)u16DataSize;
+	
 	sint8 s8tmp = M2M_SUCCESS;
 	switch(u8OpCode)
 	{

@@ -501,6 +501,7 @@ _EXIT0:
 
 sint8  m2m_wifi_deinit(void * arg)
 {
+	(void)arg;
 
 	hif_deinit(NULL);
 
@@ -512,6 +513,8 @@ sint8  m2m_wifi_deinit(void * arg)
 
 sint8 m2m_wifi_handle_events(void * arg)
 {
+	(void)arg;
+
 	return hif_handle_isr();
 }
 
@@ -668,6 +671,8 @@ sint8 m2m_wifi_request_dhcp_client(void)
 }
 sint8 m2m_wifi_request_dhcp_server(uint8* addr)
 {
+	(void)addr;
+
     /*legacy API should be removed */
 	return 0;
 }
@@ -858,6 +863,7 @@ sint8 m2m_wifi_wps_disable(void)
 */
 sint8 m2m_wifi_req_client_ctrl(uint8 u8Cmd)
 {
+	(void)u8Cmd;
 
 	sint8 ret = M2M_SUCCESS;
 #ifdef _PS_SERVER_
@@ -881,6 +887,8 @@ sint8 m2m_wifi_req_client_ctrl(uint8 u8Cmd)
 */
 sint8 m2m_wifi_req_server_init(uint8 ch)
 {
+	(void)ch;
+	
 	sint8 ret = M2M_SUCCESS;
 #ifdef _PS_SERVER_
 	tstrM2mServerInit strServer;
