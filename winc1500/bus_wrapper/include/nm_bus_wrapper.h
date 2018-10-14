@@ -122,7 +122,7 @@ typedef struct
 	uint16	u16Sz;		/*!< Operation size */
 } tstrNmUartDefault;
 /*!< Bus capabilities. This structure must be declared at platform specific bus wrapper */
-extern tstrNmBusCapabilities egstrNmBusCapabilities;
+extern const tstrNmBusCapabilities egstrNmBusCapabilities;
 
 
 #ifdef __cplusplus
@@ -133,7 +133,7 @@ extern tstrNmBusCapabilities egstrNmBusCapabilities;
 *	@brief	Initialize the bus wrapper
 *	@return	ZERO in case of success and M2M_ERR_BUS_FAIL in case of failure
 */
-sint8 nm_bus_init(void *);
+sint8 nm_bus_init(winc1500_t *dev, void *pvinit);
 
 /**
 *	@fn		nm_bus_ioctl
@@ -145,14 +145,14 @@ sint8 nm_bus_init(void *);
 *	@return	ZERO in case of success and M2M_ERR_BUS_FAIL in case of failure
 *	@note	For SPI only, it's important to be able to send/receive at the same time
 */
-sint8 nm_bus_ioctl(uint8 u8Cmd, void* pvParameter);
+sint8 nm_bus_ioctl(winc1500_t *dev, uint8 u8Cmd, void* pvParameter);
 
 /**
 *	@fn		nm_bus_deinit
 *	@brief	De-initialize the bus wrapper
 *	@return	ZERO in case of success and M2M_ERR_BUS_FAIL in case of failure
 */
-sint8 nm_bus_deinit(void);
+sint8 nm_bus_deinit(winc1500_t *dev);
 
 /*
 *	@fn			nm_bus_reinit
@@ -161,7 +161,7 @@ sint8 nm_bus_deinit(void);
 *					re-init configuration data
 *	@return		ZERO in case of success and M2M_ERR_BUS_FAIL in case of failure
 */
-sint8 nm_bus_reinit(void *);
+sint8 nm_bus_reinit(winc1500_t *dev, void* config);
 /*
 *	@fn			nm_bus_get_chip_type
 *	@brief		get chip type

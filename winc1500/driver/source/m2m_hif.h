@@ -89,11 +89,11 @@ typedef struct
 @param [in]	grp
 				HIF group type.
 */
-typedef void (*tpfHifCallBack)(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr);
+typedef void (*tpfHifCallBack)(winc1500_t *dev, uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr);
 /**
  * @brief	Wi-Fi module interrupt service routine.
  */
-void m2m_hif_isr(void);
+void m2m_hif_isr(void *arg);
 /**
 *   @fn			NMI_API sint8 hif_init(void * arg);
 *   @brief
@@ -103,7 +103,7 @@ void m2m_hif_isr(void);
 *   @return
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_init(void * arg);
+NMI_API sint8 hif_init(winc1500_t *dev, void * arg);
 /**
 *	@fn			NMI_API sint8 hif_deinit(void * arg);
 *	@brief
@@ -113,7 +113,7 @@ NMI_API sint8 hif_init(void * arg);
 *    @return
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_deinit(void * arg);
+NMI_API sint8 hif_deinit(winc1500_t *dev, void * arg);
 /**
 *	@fn		NMI_API sint8 hif_send(uint8 u8Gid,uint8 u8Opcode,uint8 *pu8CtrlBuf,uint16 u16CtrlBufSize,
 					   uint8 *pu8DataBuf,uint16 u16DataSize, uint16 u16DataOffset)
@@ -135,7 +135,7 @@ NMI_API sint8 hif_deinit(void * arg);
 				Packet buffer size (including the HIF header).
 *    @return	The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_send(uint8 u8Gid,uint8 u8Opcode,uint8 *pu8CtrlBuf,uint16 u16CtrlBufSize,
+NMI_API sint8 hif_send(winc1500_t *dev, uint8 u8Gid,uint8 u8Opcode,uint8 *pu8CtrlBuf,uint16 u16CtrlBufSize,
 					   uint8 *pu8DataBuf,uint16 u16DataSize, uint16 u16DataOffset);
 /*
 *	@fn		hif_receive
@@ -152,7 +152,7 @@ NMI_API sint8 hif_send(uint8 u8Gid,uint8 u8Opcode,uint8 *pu8CtrlBuf,uint16 u16Ct
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
 
-NMI_API sint8 hif_receive(uint32 u32Addr, uint8 *pu8Buf, uint16 u16Sz, uint8 isDone);
+NMI_API sint8 hif_receive(winc1500_t *dev, uint32 u32Addr, uint8 *pu8Buf, uint16 u16Sz, uint8 isDone);
 /**
 *	@fn			hif_register_cb
 *	@brief
@@ -166,7 +166,7 @@ NMI_API sint8 hif_receive(uint32 u32Addr, uint8 *pu8Buf, uint16 u16Sz, uint8 isD
 *   @return
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_register_cb(uint8 u8Grp,tpfHifCallBack fn);
+NMI_API sint8 hif_register_cb(winc1500_t *dev, uint8 u8Grp,tpfHifCallBack fn);
 /**
 *	@fn		NMI_API sint8 hif_chip_sleep(void);
 *	@brief
@@ -174,7 +174,7 @@ NMI_API sint8 hif_register_cb(uint8 u8Grp,tpfHifCallBack fn);
 *   @return
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_chip_sleep(void);
+NMI_API sint8 hif_chip_sleep(winc1500_t *dev);
 /**
 *	@fn		NMI_API sint8 hif_chip_sleep_sc(void);
 *	@brief
@@ -182,7 +182,7 @@ NMI_API sint8 hif_chip_sleep(void);
 *   @return
 				The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 hif_chip_sleep_sc(void);
+NMI_API sint8 hif_chip_sleep_sc(winc1500_t *dev);
 /**
 *	@fn		NMI_API sint8 hif_chip_wake(void);
 *	@brief
@@ -191,7 +191,7 @@ NMI_API sint8 hif_chip_sleep_sc(void);
 			The function shall return ZERO for successful operation and a negative value otherwise.
 */
 
-NMI_API sint8 hif_chip_wake(void);
+NMI_API sint8 hif_chip_wake(winc1500_t *dev);
 /*!
 @fn	\
 			NMI_API void hif_set_sleep_mode(uint8 u8Pstype);
@@ -206,7 +206,7 @@ NMI_API sint8 hif_chip_wake(void);
 			The function SHALL return 0 for success and a negative value otherwise.
 */
 
-NMI_API void hif_set_sleep_mode(uint8 u8Pstype);
+NMI_API void hif_set_sleep_mode(winc1500_t *dev, uint8 u8Pstype);
 /*!
 @fn	\
 	NMI_API uint8 hif_get_sleep_mode(void);
@@ -218,7 +218,7 @@ NMI_API void hif_set_sleep_mode(uint8 u8Pstype);
 	The function SHALL return the sleep mode of the HIF layer.
 */
 
-NMI_API uint8 hif_get_sleep_mode(void);
+NMI_API uint8 hif_get_sleep_mode(winc1500_t *dev);
 
 #ifdef CORTUS_APP
 /**
@@ -245,7 +245,7 @@ NMI_API sint8 hif_Resp_handler(uint8 *pu8Buffer, uint16 u16BufferSize);
 *   @return
 			The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 hif_handle_isr(void);
+NMI_API sint8 hif_handle_isr(winc1500_t *dev);
 
 #ifdef __cplusplus
 }

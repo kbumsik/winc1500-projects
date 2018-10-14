@@ -68,7 +68,7 @@ INCLUDES
 @param[in] u8MsgType
 @param[in] pvMsg A structure to provide notification payload.
 */
-typedef void (*tpfAppSSLCb) (uint8 u8MsgType, void * pvMsg);
+typedef void (*tpfAppSSLCb) (winc1500_t *dev, uint8 u8MsgType, void * pvMsg);
 
 /**@}
 */
@@ -88,7 +88,7 @@ FUNCTION PROTOTYPES
 				Application SSL callback function.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_init(tpfAppSSLCb pfAppSSLCb);
+NMI_API sint8 m2m_ssl_init(winc1500_t *dev, tpfAppSSLCb pfAppSSLCb);
 
 /*!
 	@fn	\	 NMI_API sint8 m2m_ssl_handshake_rsp(tstrEccReqInfo* strECCResp, uint8* pu8RspDataBuff, uint16 u16RspDataSz)
@@ -101,7 +101,7 @@ NMI_API sint8 m2m_ssl_init(tpfAppSSLCb pfAppSSLCb);
 				Response data size.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_handshake_rsp(tstrEccReqInfo* strECCResp, uint8* pu8RspDataBuff, uint16 u16RspDataSz);
+NMI_API sint8 m2m_ssl_handshake_rsp(winc1500_t *dev, tstrEccReqInfo* strECCResp, uint8* pu8RspDataBuff, uint16 u16RspDataSz);
 
 /*!
 	@fn	\	NMI_API sint8 m2m_ssl_send_certs_to_winc(uint8* pu8Buffer, uint32 u32BufferSz)
@@ -112,7 +112,7 @@ NMI_API sint8 m2m_ssl_handshake_rsp(tstrEccReqInfo* strECCResp, uint8* pu8RspDat
 				Size of the certificates.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_send_certs_to_winc(uint8* pu8Buffer, uint32 u32BufferSz);
+NMI_API sint8 m2m_ssl_send_certs_to_winc(winc1500_t *dev, uint8* pu8Buffer, uint32 u32BufferSz);
 
 /*!
 	@fn	\	NMI_API sint8 m2m_ssl_retrieve_cert(uint16* pu16CurveType, uint8* pu8Hash, uint8* pu8Sig, tstrECPoint* pu8Key)
@@ -127,7 +127,7 @@ NMI_API sint8 m2m_ssl_send_certs_to_winc(uint8* pu8Buffer, uint32 u32BufferSz);
 				Pointer to the certificate Key.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_retrieve_cert(uint16* pu16CurveType, uint8* pu8Hash, uint8* pu8Sig, tstrECPoint* pu8Key);
+NMI_API sint8 m2m_ssl_retrieve_cert(winc1500_t *dev, uint16* pu16CurveType, uint8* pu8Hash, uint8* pu8Sig, tstrECPoint* pu8Key);
 
 /*!
 	@fn	\	NMI_API sint8 m2m_ssl_retrieve_hash(uint8* pu8Hash, uint16 u16HashSz)
@@ -138,7 +138,7 @@ NMI_API sint8 m2m_ssl_retrieve_cert(uint16* pu16CurveType, uint8* pu8Hash, uint8
 				Hash size.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_retrieve_hash(uint8* pu8Hash, uint16 u16HashSz);
+NMI_API sint8 m2m_ssl_retrieve_hash(winc1500_t *dev, uint8* pu8Hash, uint16 u16HashSz);
 
 /*!
 	@fn	\	NMI_API void m2m_ssl_stop_processing_certs(void)
@@ -146,7 +146,7 @@ NMI_API sint8 m2m_ssl_retrieve_hash(uint8* pu8Hash, uint16 u16HashSz);
 	@warning	This API must only be called if some certificates are left unread.
 	@return		None.
 */
-NMI_API void m2m_ssl_stop_processing_certs(void);
+NMI_API void m2m_ssl_stop_processing_certs(winc1500_t *dev);
 
 /*!
 	@fn	\	NMI_API void m2m_ssl_ecc_process_done(void)
@@ -154,7 +154,7 @@ NMI_API void m2m_ssl_stop_processing_certs(void);
 	@warning	This API must be called after receiving a SSL callback with type @ref M2M_SSL_REQ_ECC
 	@return		None.
 */
-NMI_API void m2m_ssl_ecc_process_done(void);
+NMI_API void m2m_ssl_ecc_process_done(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -176,7 +176,7 @@ NMI_API void m2m_ssl_ecc_process_done(void);
 	- [SOCK_ERR_NO_ERROR](@ref SOCK_ERR_NO_ERROR)
 	- [SOCK_ERR_INVALID_ARG](@ref SOCK_ERR_INVALID_ARG)
 */
-sint8 m2m_ssl_set_active_ciphersuites(uint32 u32SslCsBMP);
+sint8 m2m_ssl_set_active_ciphersuites(winc1500_t *dev, uint32 u32SslCsBMP);
 
  /**@}*/
 #endif /* __M2M_SSL_H__ */

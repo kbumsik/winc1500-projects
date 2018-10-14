@@ -94,33 +94,31 @@
 #define DATA_PKT_SZ_8K			(8 * 1024)
 #define DATA_PKT_SZ				DATA_PKT_SZ_8K
 
-static uint8 	gu8Crc_off	=   0;
-
-static sint8 nmi_spi_read(uint8* b, uint16 sz)
+static sint8 nmi_spi_read(winc1500_t *dev, uint8* b, uint16 sz)
 {
 	tstrNmSpiRw spi;
 	spi.pu8InBuf = NULL;
 	spi.pu8OutBuf = b;
 	spi.u16Sz = sz;
-	return nm_bus_ioctl(NM_BUS_IOCTL_RW, &spi);
+	return nm_bus_ioctl(dev, NM_BUS_IOCTL_RW, &spi);
 }
 
-static sint8 nmi_spi_write(uint8* b, uint16 sz)
+static sint8 nmi_spi_write(winc1500_t *dev, uint8* b, uint16 sz)
 {
 	tstrNmSpiRw spi;
 	spi.pu8InBuf = b;
 	spi.pu8OutBuf = NULL;
 	spi.u16Sz = sz;
-	return nm_bus_ioctl(NM_BUS_IOCTL_RW, &spi);
+	return nm_bus_ioctl(dev, NM_BUS_IOCTL_RW, &spi);
 }
 #ifndef USE_OLD_SPI_SW
-static sint8 nmi_spi_rw(uint8 *bin,uint8* bout,uint16 sz)
+static sint8 nmi_spi_rw(winc1500_t *dev, uint8 *bin,uint8* bout,uint16 sz)
 {
 	tstrNmSpiRw spi;
 	spi.pu8InBuf = bin;
 	spi.pu8OutBuf = bout;
 	spi.u16Sz = sz;
-	return nm_bus_ioctl(NM_BUS_IOCTL_RW, &spi);	
+	return nm_bus_ioctl(dev, NM_BUS_IOCTL_RW, &spi);
 }
 #endif
 /********************************************
@@ -202,8 +200,9 @@ static uint8 crc7(uint8 crc, const uint8 *buffer, uint32 len)
 #define DATA_PKT_SZ_8K			(8 * 1024)
 #define DATA_PKT_SZ				DATA_PKT_SZ_8K
 
-static sint8 spi_cmd(uint8 cmd, uint32 adr, uint32 u32data, uint32 sz,uint8 clockless)
+static sint8 spi_cmd(winc1500_t *dev, uint8 cmd, uint32 adr, uint32 u32data, uint32 sz,uint8 clockless)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	uint8 bc[9];
 	uint8 len = 5;
 	sint8 result = N_OK;
@@ -286,12 +285,12 @@ static sint8 spi_cmd(uint8 cmd, uint32 adr, uint32 u32data, uint32 sz,uint8 cloc
 	}
 
 	if (result) {
-		if (!gu8Crc_off)
+		if (!internal->gu8Crc_off)
 			bc[len-1] = (crc7(0x7f, (const uint8 *)&bc[0], len-1)) << 1;
 		else
 			len-=1;
 
-		if (M2M_SUCCESS != nmi_spi_write(bc, len)) {
+		if (M2M_SUCCESS != nmi_spi_write(dev, bc, len)) {
 			M2M_ERR("[nmi spi]: Failed cmd write, bus error...\n");
 			result = N_FAIL;
 		}
@@ -300,25 +299,26 @@ static sint8 spi_cmd(uint8 cmd, uint32 adr, uint32 u32data, uint32 sz,uint8 cloc
 	return result;
 }
 
-static sint8 spi_data_rsp(uint8 cmd)
+static sint8 spi_data_rsp(winc1500_t *dev, uint8 cmd)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	(void)cmd;
-	
+
 	uint8 len;
 	uint8 rsp[3];
 	sint8 result = N_OK;
 
-    if (!gu8Crc_off)
+    if (!internal->gu8Crc_off)
 		len = 2;
 	else
 		len = 3;
 
-	if (M2M_SUCCESS != nmi_spi_read(&rsp[0], len)) {
+	if (M2M_SUCCESS != nmi_spi_read(dev, &rsp[0], len)) {
 		M2M_ERR("[nmi spi]: Failed bus error...\n");
 		result = N_FAIL;
 		goto _fail_;
 	}
-		
+
 	if((rsp[len-1] != 0)||(rsp[len-2] != 0xC3))
 	{
 		M2M_ERR("[nmi spi]: Failed data response read, %x %x %x\n",rsp[0],rsp[1],rsp[2]);
@@ -330,7 +330,7 @@ _fail_:
 	return result;
 }
 
-static sint8 spi_cmd_rsp(uint8 cmd)
+static sint8 spi_cmd_rsp(winc1500_t *dev, uint8 cmd)
 {
 	uint8 rsp;
 	sint8 result = N_OK;
@@ -342,7 +342,7 @@ static sint8 spi_cmd_rsp(uint8 cmd)
 	if ((cmd == CMD_RESET) ||
 		 (cmd == CMD_TERMINATE) ||
 		 (cmd == CMD_REPEAT)) {
-		if (M2M_SUCCESS != nmi_spi_read(&rsp, 1)) {
+		if (M2M_SUCCESS != nmi_spi_read(dev, &rsp, 1)) {
 			result = N_FAIL;
 			goto _fail_;
 		}
@@ -352,7 +352,7 @@ static sint8 spi_cmd_rsp(uint8 cmd)
 	s8RetryCnt = SPI_RESP_RETRY_COUNT;
 	do
 	{
-		if (M2M_SUCCESS != nmi_spi_read(&rsp, 1)) {
+		if (M2M_SUCCESS != nmi_spi_read(dev, &rsp, 1)) {
 			M2M_ERR("[nmi spi]: Failed cmd response read, bus error...\n");
 			result = N_FAIL;
 			goto _fail_;
@@ -366,7 +366,7 @@ static sint8 spi_cmd_rsp(uint8 cmd)
 	s8RetryCnt = SPI_RESP_RETRY_COUNT;
 	do
 	{
-		if (M2M_SUCCESS != nmi_spi_read(&rsp, 1)) {
+		if (M2M_SUCCESS != nmi_spi_read(dev, &rsp, 1)) {
 			M2M_ERR("[nmi spi]: Failed cmd response read, bus error...\n");
 			result = N_FAIL;
 			goto _fail_;
@@ -378,8 +378,9 @@ _fail_:
 	return result;
 }
 #ifndef USE_OLD_SPI_SW
-static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, uint8_t clockless)
+static int spi_cmd_complete(winc1500_t *dev, uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, uint8_t clockless)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	uint8_t wb[32], rb[32];
 	uint8_t wix, rix;
 	uint32_t len2;
@@ -468,7 +469,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 		return result;
 	}
 
-	if (!gu8Crc_off) {
+	if (!internal->gu8Crc_off) {
 		wb[len-1] = (crc7(0x7f, (const uint8_t *)&wb[0], len-1)) << 1;
 	} else {
 		len -=1;
@@ -486,7 +487,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 		(cmd == CMD_REPEAT)) {
 			len2 = len + (NUM_SKIP_BYTES + NUM_RSP_BYTES + NUM_DUMMY_BYTES);
 	} else if ((cmd == CMD_INTERNAL_READ) || (cmd == CMD_SINGLE_READ)) {
-		if (!gu8Crc_off) {
+		if (!internal->gu8Crc_off) {
 			len2 = len + (NUM_RSP_BYTES + NUM_DATA_HDR_BYTES + NUM_DATA_BYTES 
 			+ NUM_CRC_BYTES + NUM_DUMMY_BYTES);	
 		} else {
@@ -622,7 +623,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					return result;
 				}
 
-				if (!gu8Crc_off) {						
+				if (!internal->gu8Crc_off) {
 					/**
 					Read Crc
 					**/
@@ -659,7 +660,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					/**
 					Read bytes
 					**/
-					if (nmi_spi_read(&b[ix], nbytes) != M2M_SUCCESS) {
+					if (nmi_spi_read(dev, &b[ix], nbytes) != M2M_SUCCESS) {
 						M2M_ERR("[nmi spi]: Failed data block read, bus error...\n");
 						result = N_FAIL;
 						goto _error_;
@@ -668,8 +669,8 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					/**
 					Read Crc
 					**/
-					if (!gu8Crc_off) {
-						if (nmi_spi_read(crc, 2) != M2M_SUCCESS) {
+					if (!internal->gu8Crc_off) {
+						if (nmi_spi_read(dev, crc, 2) != M2M_SUCCESS) {
 							M2M_ERR("[nmi spi]: Failed data block crc read, bus error...\n");
 							result = N_FAIL;
 							goto _error_;
@@ -701,7 +702,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					**/
 					retry = SPI_RESP_RETRY_COUNT;
 					do {
-						if (nmi_spi_read(&rsp, 1) != M2M_SUCCESS) {
+						if (nmi_spi_read(dev, &rsp, 1) != M2M_SUCCESS) {
 							M2M_ERR("[nmi spi]: Failed data response read, bus error...\n");
 							result = N_FAIL;
 							break;
@@ -717,7 +718,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					/**
 					Read bytes
 					**/
-					if (nmi_spi_read(&b[ix], nbytes) != M2M_SUCCESS) {
+					if (nmi_spi_read(dev, &b[ix], nbytes) != M2M_SUCCESS) {
 						M2M_ERR("[nmi spi]: Failed data block read, bus error...\n");
 						result = N_FAIL;
 						break;
@@ -726,8 +727,8 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz, 
 					/**
 					Read Crc
 					**/
-					if (!gu8Crc_off) {
-						if (nmi_spi_read(crc, 2) != M2M_SUCCESS) {
+					if (!internal->gu8Crc_off) {
+						if (nmi_spi_read(dev, crc, 2) != M2M_SUCCESS) {
 							M2M_ERR("[nmi spi]: Failed data block crc read, bus error...\n");
 							result = N_FAIL;
 							break;
@@ -743,8 +744,9 @@ _error_:
 	return result;
 }
 #endif
-static sint8 spi_data_read(uint8 *b, uint16 sz,uint8 clockless)
+static sint8 spi_data_read(winc1500_t *dev, uint8 *b, uint16 sz,uint8 clockless)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint16 retry, ix, nbytes;
 	sint8 result = N_OK;
 	uint8 crc[2];
@@ -765,7 +767,7 @@ static sint8 spi_data_read(uint8 *b, uint16 sz,uint8 clockless)
 		**/
 		retry = SPI_RESP_RETRY_COUNT;
 		do {
-			if (M2M_SUCCESS != nmi_spi_read(&rsp, 1)) {
+			if (M2M_SUCCESS != nmi_spi_read(dev, &rsp, 1)) {
 				M2M_ERR("[nmi spi]: Failed data response read, bus error...\n");
 				result = N_FAIL;
 				break;
@@ -786,7 +788,7 @@ static sint8 spi_data_read(uint8 *b, uint16 sz,uint8 clockless)
 		/**
 			Read bytes
 		**/
-		if (M2M_SUCCESS != nmi_spi_read(&b[ix], nbytes)) {
+		if (M2M_SUCCESS != nmi_spi_read(dev, &b[ix], nbytes)) {
 			M2M_ERR("[nmi spi]: Failed data block read, bus error...\n");
 			result = N_FAIL;
 			break;
@@ -796,8 +798,8 @@ static sint8 spi_data_read(uint8 *b, uint16 sz,uint8 clockless)
 			/**
 			Read Crc
 			**/
-			if (!gu8Crc_off) {
-				if (M2M_SUCCESS != nmi_spi_read(crc, 2)) {
+			if (!internal->gu8Crc_off) {
+				if (M2M_SUCCESS != nmi_spi_read(dev, crc, 2)) {
 					M2M_ERR("[nmi spi]: Failed data block crc read, bus error...\n");
 					result = N_FAIL;
 					break;
@@ -812,8 +814,9 @@ static sint8 spi_data_read(uint8 *b, uint16 sz,uint8 clockless)
 	return result;
 }
 
-static sint8 spi_data_write(uint8 *b, uint16 sz)
+static sint8 spi_data_write(winc1500_t *dev, uint8 *b, uint16 sz)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint16 ix;
 	uint16 nbytes;
 	sint8 result = 1;
@@ -846,7 +849,7 @@ static sint8 spi_data_write(uint8 *b, uint16 sz)
 				order = 0x2;
 		}
 		cmd |= order;
-		if (M2M_SUCCESS != nmi_spi_write(&cmd, 1)) {
+		if (M2M_SUCCESS != nmi_spi_write(dev, &cmd, 1)) {
 			M2M_ERR("[nmi spi]: Failed data block cmd write, bus error...\n");
 			result = N_FAIL;
 			break;
@@ -855,7 +858,7 @@ static sint8 spi_data_write(uint8 *b, uint16 sz)
 		/**
 			Write data
 		**/
-		if (M2M_SUCCESS != nmi_spi_write(&b[ix], nbytes)) {
+		if (M2M_SUCCESS != nmi_spi_write(dev, &b[ix], nbytes)) {
 			M2M_ERR("[nmi spi]: Failed data block write, bus error...\n");
 			result = N_FAIL;
 			break;
@@ -864,8 +867,8 @@ static sint8 spi_data_write(uint8 *b, uint16 sz)
 		/**
 			Write Crc
 		**/
-		if (!gu8Crc_off) {
-			if (M2M_SUCCESS != nmi_spi_write(crc, 2)) {
+		if (!internal->gu8Crc_off) {
+			if (M2M_SUCCESS != nmi_spi_write(dev, crc, 2)) {
 				M2M_ERR("[nmi spi]: Failed data block crc write, bus error...\n");
 				result = N_FAIL;
 				break;
@@ -892,7 +895,7 @@ static sint8 spi_data_write(uint8 *b, uint16 sz)
 
 ********************************************/
 
-static sint8 spi_write_reg(uint32 addr, uint32 u32data)
+static sint8 spi_write_reg(winc1500_t *dev, uint32 addr, uint32 u32data)
 {
 	uint8 retry = SPI_RETRY_COUNT;
 	sint8 result = N_OK;
@@ -915,13 +918,13 @@ _RETRY_:
 	}
 
 #if defined USE_OLD_SPI_SW
-	result = spi_cmd(cmd, addr, u32data, 4, clockless);
+	result = spi_cmd(dev, cmd, addr, u32data, 4, clockless);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd, write reg (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 
-	result = spi_cmd_rsp(cmd);
+	result = spi_cmd_rsp(dev, cmd);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd response, write reg (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
@@ -929,7 +932,7 @@ _RETRY_:
 
 #else
 
-	result = spi_cmd_complete(cmd, addr, (uint8*)&u32data, 4, clockless);
+	result = spi_cmd_complete(dev, cmd, addr, (uint8*)&u32data, 4, clockless);
 	if (result != N_OK) {
 		M2M_ERR( "[nmi spi]: Failed cmd, write reg (%08x)...\n", addr);
 		goto _FAIL_;
@@ -940,8 +943,8 @@ _FAIL_:
 	if(result != N_OK)
 	{
 		nm_bsp_sleep(1);
-		spi_cmd(CMD_RESET, 0, 0, 0, 0);
-		spi_cmd_rsp(CMD_RESET);
+		spi_cmd(dev, CMD_RESET, 0, 0, 0, 0);
+		spi_cmd_rsp(dev, CMD_RESET);
 		M2M_ERR("Reset and retry %d %lx %lx\n",retry,addr,u32data);
 		nm_bsp_sleep(1);
 		retry--;
@@ -951,7 +954,7 @@ _FAIL_:
 	return result;
 }
 
-static sint8 nm_spi_write(uint32 addr, uint8 *buf, uint16 size)
+static sint8 nm_spi_write(winc1500_t *dev, uint32 addr, uint8 *buf, uint16 size)
 {
 	sint8 result;
 	uint8 retry = SPI_RETRY_COUNT;
@@ -967,19 +970,19 @@ _RETRY_:
 	if (size == 1)
 		size = 2;
 
-	result = spi_cmd(cmd, addr, 0, size,0);
+	result = spi_cmd(dev, cmd, addr, 0, size,0);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd, write block (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 
-	result = spi_cmd_rsp(cmd);
+	result = spi_cmd_rsp(dev, cmd);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi ]: Failed cmd response, write block (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 #else
-	result = spi_cmd_complete(cmd, addr, NULL, size, 0);
+	result = spi_cmd_complete(dev, cmd, addr, NULL, size, 0);
 	if (result != N_OK) {
 		M2M_ERR( "[nmi spi]: Failed cmd, write block (%08x)...\n", addr);
 		goto _FAIL_;
@@ -989,7 +992,7 @@ _RETRY_:
 	/**
 		Data
 	**/
-	result = spi_data_write(buf, size);
+	result = spi_data_write(dev, buf, size);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed block data write...\n");
 		goto _FAIL_;
@@ -997,7 +1000,7 @@ _RETRY_:
 	/**
 		Data RESP
 	**/
-	result = spi_data_rsp(cmd);
+	result = spi_data_rsp(dev, cmd);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed block data write...\n");
 		goto _FAIL_;
@@ -1007,8 +1010,8 @@ _FAIL_:
 	if(result != N_OK)
 	{
 		nm_bsp_sleep(1);
-		spi_cmd(CMD_RESET, 0, 0, 0, 0);
-		spi_cmd_rsp(CMD_RESET);
+		spi_cmd(dev, CMD_RESET, 0, 0, 0, 0);
+		spi_cmd_rsp(dev, CMD_RESET);
 		M2M_ERR("Reset and retry %d %lx %d\n",retry,addr,size);
 		nm_bsp_sleep(1);
 		retry--;
@@ -1019,7 +1022,7 @@ _FAIL_:
 	return result;
 }
 
-static sint8 spi_read_reg(uint32 addr, uint32 *u32data)
+static sint8 spi_read_reg(winc1500_t *dev, uint32 addr, uint32 *u32data)
 {
 	uint8 retry = SPI_RETRY_COUNT;
 	sint8 result = N_OK;
@@ -1044,26 +1047,26 @@ _RETRY_:
 	}
 
 #if defined USE_OLD_SPI_SW
-	result = spi_cmd(cmd, addr, 0, 4, clockless);
+	result = spi_cmd(dev, cmd, addr, 0, 4, clockless);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd, read reg (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 
-	result = spi_cmd_rsp(cmd);
+	result = spi_cmd_rsp(dev, cmd);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd response, read reg (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 
 	/* to avoid endianess issues */
-	result = spi_data_read(&tmp[0], 4, clockless);
+	result = spi_data_read(dev, &tmp[0], 4, clockless);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed data read...\n");
 		goto _FAIL_;
 	}
 #else
-	result = spi_cmd_complete(cmd, addr, (uint8*)&tmp[0], 4, clockless);
+	result = spi_cmd_complete(dev, cmd, addr, (uint8*)&tmp[0], 4, clockless);
 	if (result != N_OK) {
 		M2M_ERR( "[nmi spi]: Failed cmd, read reg (%08x)...\n", addr);
 		goto _FAIL_;
@@ -1075,24 +1078,24 @@ _RETRY_:
 		((uint32)tmp[1] << 8) |
 		((uint32)tmp[2] << 16) |
 		((uint32)tmp[3] << 24);
-		
+
 _FAIL_:
 	if(result != N_OK)
 	{
-		
+
 		nm_bsp_sleep(1);
-		spi_cmd(CMD_RESET, 0, 0, 0, 0);
-		spi_cmd_rsp(CMD_RESET);
+		spi_cmd(dev, CMD_RESET, 0, 0, 0, 0);
+		spi_cmd_rsp(dev, CMD_RESET);
 		M2M_ERR("Reset and retry %d %lx\n",retry,addr);
 		nm_bsp_sleep(1);
 		retry--;
 		if(retry) goto _RETRY_;
 	}
-		
+
 	return result;
 }
 
-static sint8 nm_spi_read(uint32 addr, uint8 *buf, uint16 size)
+static sint8 nm_spi_read(winc1500_t *dev, uint32 addr, uint8 *buf, uint16 size)
 {
 	uint8 cmd = CMD_DMA_EXT_READ;
 	sint8 result;
@@ -1114,13 +1117,13 @@ _RETRY_:
 		size = 2;
 		single_byte_workaround = 1;
 	}
-	result = spi_cmd(cmd, addr, 0, size,0);
+	result = spi_cmd(dev, cmd, addr, 0, size,0);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd, read block (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
 	}
 
-	result = spi_cmd_rsp(cmd);
+	result = spi_cmd_rsp(dev, cmd);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd response, read block (%08x)...\n", (unsigned int)addr);
 		goto _FAIL_;
@@ -1131,18 +1134,18 @@ _RETRY_:
 	**/
 	if (single_byte_workaround)
 	{
-		result = spi_data_read(tmp, size,0);
+		result = spi_data_read(dev, tmp, size,0);
 		buf[0] = tmp[0];
 	}
 	else
-		result = spi_data_read(buf, size,0);
+		result = spi_data_read(dev, buf, size,0);
 
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed block data read...\n");
 		goto _FAIL_;
 	}
 #else
-	result = spi_cmd_complete(cmd, addr, buf, size, 0);
+	result = spi_cmd_complete(dev, cmd, addr, buf, size, 0);
 	if (result != N_OK) {
 		M2M_ERR("[nmi spi]: Failed cmd, read block (%08x)...\n", addr);
 		goto _FAIL_;
@@ -1153,8 +1156,8 @@ _FAIL_:
 	if(result != N_OK)
 	{
 		nm_bsp_sleep(1);
-		spi_cmd(CMD_RESET, 0, 0, 0, 0);
-		spi_cmd_rsp(CMD_RESET);
+		spi_cmd(dev, CMD_RESET, 0, 0, 0, 0);
+		spi_cmd_rsp(dev, CMD_RESET);
 		M2M_ERR("Reset and retry %d %lx %d\n",retry,addr,size);
 		nm_bsp_sleep(1);
 		retry--;
@@ -1170,12 +1173,12 @@ _FAIL_:
 
 ********************************************/
 
-static void spi_init_pkt_sz(void)
+static void spi_init_pkt_sz(winc1500_t *dev)
 {
 	uint32 val32;
 
 	/* Make sure SPI max. packet size fits the defined DATA_PKT_SZ.  */
-	val32 = nm_spi_read_reg(SPI_BASE+0x24);
+	val32 = nm_spi_read_reg(dev, SPI_BASE+0x24);
 	val32 &= ~(0x7 << 4);
 	switch(DATA_PKT_SZ)
 	{
@@ -1187,13 +1190,13 @@ static void spi_init_pkt_sz(void)
 	case 8192: val32 |= (5 << 4); break;
 
 	}
-	nm_spi_write_reg(SPI_BASE+0x24, val32);
+	nm_spi_write_reg(dev, SPI_BASE+0x24, val32);
 }
 
-sint8 nm_spi_reset(void)
+sint8 nm_spi_reset(winc1500_t *dev)
 {
-	spi_cmd(CMD_RESET, 0, 0, 0, 0);
-	spi_cmd_rsp(CMD_RESET);
+	spi_cmd(dev, CMD_RESET, 0, 0, 0, 0);
+	spi_cmd_rsp(dev, CMD_RESET);
 	return M2M_SUCCESS;
 }
 
@@ -1205,52 +1208,53 @@ sint8 nm_spi_reset(void)
 *	@date	11 July 2012
 *	@version	1.0
 */
-sint8 nm_spi_init(void)
+sint8 nm_spi_init(winc1500_t *dev)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	uint32 chipid;
 	uint32 reg = 0;
-	
+
 
 	/**
 		configure protocol
 	**/
-	gu8Crc_off = 0;
+	internal->gu8Crc_off = 0;
 
 	// TODO: We can remove the CRC trials if there is a definite way to reset
 	// the SPI to it's initial value.
-	if (!spi_read_reg(NMI_SPI_PROTOCOL_CONFIG, &reg)) {
+	if (!spi_read_reg(dev, NMI_SPI_PROTOCOL_CONFIG, &reg)) {
 		/* Read failed. Try with CRC off. This might happen when module
 		is removed but chip isn't reset*/
-		gu8Crc_off = 1;
+		internal->gu8Crc_off = 1;
 		M2M_ERR("[nmi spi]: Failed internal read protocol with CRC on, retyring with CRC off...\n");
-		if (!spi_read_reg(NMI_SPI_PROTOCOL_CONFIG, &reg)){
+		if (!spi_read_reg(dev, NMI_SPI_PROTOCOL_CONFIG, &reg)){
 			// Reaad failed with both CRC on and off, something went bad
 			M2M_ERR( "[nmi spi]: Failed internal read protocol...\n");
 			return 0;
 		}
 	}
-	if(gu8Crc_off == 0)
+	if(internal->gu8Crc_off == 0)
 	{
 		reg &= ~0xc;	/* disable crc checking */
 		reg &= ~0x70;
 		reg |= (0x5 << 4);
-		if (!spi_write_reg(NMI_SPI_PROTOCOL_CONFIG, reg)) {
+		if (!spi_write_reg(dev, NMI_SPI_PROTOCOL_CONFIG, reg)) {
 			M2M_ERR( "[nmi spi]: Failed internal write protocol reg...\n");
 			return 0;
 		}
-		gu8Crc_off = 1;
+		internal->gu8Crc_off = 1;
 	}
 
 	/**
 		make sure can read back chip id correctly
 	**/
-	if (!spi_read_reg(0x1000, &chipid)) {
+	if (!spi_read_reg(dev, 0x1000, &chipid)) {
 		M2M_ERR("[nmi spi]: Fail cmd read chip id...\n");
 		return M2M_ERR_BUS_FAIL;
 	}
 
 	M2M_DBG("[nmi spi]: chipid (%08x)\n", (unsigned int)chipid);
-	spi_init_pkt_sz();
+	spi_init_pkt_sz(dev);
 
 
 	return M2M_SUCCESS;
@@ -1258,15 +1262,16 @@ sint8 nm_spi_init(void)
 
 /*
 *	@fn		nm_spi_init
-*	@brief	DeInitialize the SPI 
+*	@brief	DeInitialize the SPI
 *	@return	M2M_SUCCESS in case of success and M2M_ERR_BUS_FAIL in case of failure
 *	@author	Samer Sarhan
 *	@date	27 Feb 2015
 *	@version	1.0
-*/ 
-sint8 nm_spi_deinit(void)
+*/
+sint8 nm_spi_deinit(winc1500_t *dev)
 {
-	gu8Crc_off = 0;
+	winc1500_internal_t *internal = &dev->internal;
+	internal->gu8Crc_off = 0;
 	return M2M_SUCCESS;
 }
 
@@ -1280,11 +1285,11 @@ sint8 nm_spi_deinit(void)
 *	@date	11 July 2012
 *	@version	1.0
 */
-uint32 nm_spi_read_reg(uint32 u32Addr)
+uint32 nm_spi_read_reg(winc1500_t *dev, uint32 u32Addr)
 {
 	uint32 u32Val;
 
-	spi_read_reg(u32Addr, &u32Val);
+	spi_read_reg(dev, u32Addr, &u32Val);
 
 	return u32Val;
 }
@@ -1301,11 +1306,11 @@ uint32 nm_spi_read_reg(uint32 u32Addr)
 *	@date	11 July 2012
 *	@version	1.0
 */
-sint8 nm_spi_read_reg_with_ret(uint32 u32Addr, uint32* pu32RetVal)
+sint8 nm_spi_read_reg_with_ret(winc1500_t *dev, uint32 u32Addr, uint32* pu32RetVal)
 {
 	sint8 s8Ret;
 
-	s8Ret = spi_read_reg(u32Addr,pu32RetVal);
+	s8Ret = spi_read_reg(dev, u32Addr,pu32RetVal);
 
 	if(N_OK == s8Ret) s8Ret = M2M_SUCCESS;
 	else s8Ret = M2M_ERR_BUS_FAIL;
@@ -1325,11 +1330,11 @@ sint8 nm_spi_read_reg_with_ret(uint32 u32Addr, uint32* pu32RetVal)
 *	@date	11 July 2012
 *	@version	1.0
 */
-sint8 nm_spi_write_reg(uint32 u32Addr, uint32 u32Val)
+sint8 nm_spi_write_reg(winc1500_t *dev, uint32 u32Addr, uint32 u32Val)
 {
 	sint8 s8Ret;
 
-	s8Ret = spi_write_reg(u32Addr, u32Val);
+	s8Ret = spi_write_reg(dev, u32Addr, u32Val);
 
 	if(N_OK == s8Ret) s8Ret = M2M_SUCCESS;
 	else s8Ret = M2M_ERR_BUS_FAIL;
@@ -1351,11 +1356,11 @@ sint8 nm_spi_write_reg(uint32 u32Addr, uint32 u32Val)
 *	@date	11 July 2012
 *	@version	1.0
 */
-sint8 nm_spi_read_block(uint32 u32Addr, uint8 *puBuf, uint16 u16Sz)
+sint8 nm_spi_read_block(winc1500_t *dev, uint32 u32Addr, uint8 *puBuf, uint16 u16Sz)
 {
 	sint8 s8Ret;
 
-	s8Ret = nm_spi_read(u32Addr, puBuf, u16Sz);
+	s8Ret = nm_spi_read(dev, u32Addr, puBuf, u16Sz);
 
 	if(N_OK == s8Ret) s8Ret = M2M_SUCCESS;
 	else s8Ret = M2M_ERR_BUS_FAIL;
@@ -1377,11 +1382,11 @@ sint8 nm_spi_read_block(uint32 u32Addr, uint8 *puBuf, uint16 u16Sz)
 *	@date	11 July 2012
 *	@version	1.0
 */
-sint8 nm_spi_write_block(uint32 u32Addr, uint8 *puBuf, uint16 u16Sz)
+sint8 nm_spi_write_block(winc1500_t *dev, uint32 u32Addr, uint8 *puBuf, uint16 u16Sz)
 {
 	sint8 s8Ret;
 
-	s8Ret = nm_spi_write(u32Addr, puBuf, u16Sz);
+	s8Ret = nm_spi_write(dev, u32Addr, puBuf, u16Sz);
 
 	if(N_OK == s8Ret) s8Ret = M2M_SUCCESS;
 	else s8Ret = M2M_ERR_BUS_FAIL;

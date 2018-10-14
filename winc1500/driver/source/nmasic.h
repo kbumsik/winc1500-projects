@@ -66,7 +66,7 @@
 #define REV_2B0        (0x2B0)
 #define REV_B0         (0x2B0)
 #define REV_3A0        (0x3A0)
-#define GET_CHIPID()	nmi_get_chipid()
+#define GET_CHIPID(dev)	nmi_get_chipid(dev)
 #define ISNMC1000(id)   ((((id) & 0xfffff000) == 0x100000) ? 1 : 0)
 #define ISNMC1500(id)   ((((id) & 0xfffff000) == 0x150000) ? 1 : 0)
 #define ISNMC3000(id)   ((((id) & 0xfff00000) == 0x300000) ? 1 : 0)
@@ -96,117 +96,117 @@ typedef struct{
 *	@fn		cpu_halt
 *	@brief	
 */
-sint8 cpu_halt(void);
+sint8 cpu_halt(winc1500_t *dev);
 /*
 *	@fn		chip_sleep
 *	@brief	
 */
-sint8 chip_sleep(void);
+sint8 chip_sleep(winc1500_t *dev);
 /*
 *	@fn		chip_wake
 *	@brief	
 */
-sint8 chip_wake(void);
+sint8 chip_wake(winc1500_t *dev);
 /*
 *	@fn		chip_idle
 *	@brief	
 */
-void chip_idle(void);
+void chip_idle(winc1500_t *dev);
 /*
 *	@fn		enable_interrupts
 *	@brief	
 */
-sint8 enable_interrupts(void);
+sint8 enable_interrupts(winc1500_t *dev);
 /*
 *	@fn		cpu_start	
 *	@brief	
 */
-sint8 cpu_start(void);
+sint8 cpu_start(winc1500_t *dev);
 /*
 *	@fn		nmi_get_chipid
 *	@brief	
 */
-uint32 nmi_get_chipid(void);
+uint32 nmi_get_chipid(winc1500_t *dev);
 /*
 *	@fn		nmi_get_rfrevid
 *	@brief	
 */
-uint32 nmi_get_rfrevid(void);
+uint32 nmi_get_rfrevid(winc1500_t *dev);
 /*
 *	@fn		restore_pmu_settings_after_global_reset
 *	@brief	
 */
-void restore_pmu_settings_after_global_reset(void);
+void restore_pmu_settings_after_global_reset(winc1500_t *dev);
 /*
 *	@fn		nmi_update_pll
 *	@brief	
 */
-void nmi_update_pll(void);
+void nmi_update_pll(winc1500_t *dev);
 /*
 *	@fn		nmi_set_sys_clk_src_to_xo
 *	@brief	
 */
-void nmi_set_sys_clk_src_to_xo(void);
+void nmi_set_sys_clk_src_to_xo(winc1500_t *dev);
 /*
 *	@fn		chip_reset
 *	@brief	
 */
-sint8 chip_reset(void);
+sint8 chip_reset(winc1500_t *dev);
 /*
 *	@fn		wait_for_bootrom
 *	@brief	
 */
-sint8 wait_for_bootrom(uint8);
+sint8 wait_for_bootrom(winc1500_t *dev, uint8);
 /*
 *	@fn		wait_for_firmware_start
 *	@brief	
 */
-sint8 wait_for_firmware_start(uint8);
+sint8 wait_for_firmware_start(winc1500_t *dev, uint8);
 /*
 *	@fn		chip_deinit
 *	@brief	
 */
-sint8 chip_deinit(void);
+sint8 chip_deinit(winc1500_t *dev);
 /*
 *	@fn		chip_reset_and_cpu_halt
 *	@brief	
 */
-sint8 chip_reset_and_cpu_halt(void);
+sint8 chip_reset_and_cpu_halt(winc1500_t *dev);
 /*
 *	@fn		set_gpio_dir
 *	@brief	
 */
-sint8 set_gpio_dir(uint8 gpio, uint8 dir);
+sint8 set_gpio_dir(winc1500_t *dev, uint8 gpio, uint8 dir);
 /*
 *	@fn		set_gpio_val
 *	@brief	
 */
-sint8 set_gpio_val(uint8 gpio, uint8 val);
+sint8 set_gpio_val(winc1500_t *dev, uint8 gpio, uint8 val);
 /*
 *	@fn		get_gpio_val
 *	@brief	
 */
-sint8 get_gpio_val(uint8 gpio, uint8* val);
+sint8 get_gpio_val(winc1500_t *dev, uint8 gpio, uint8* val);
 /*
 *	@fn		pullup_ctrl
 *	@brief	
 */
-sint8 pullup_ctrl(uint32 pinmask, uint8 enable);
+sint8 pullup_ctrl(winc1500_t *dev, uint32 pinmask, uint8 enable);
 /*
 *	@fn		nmi_get_otp_mac_address
 *	@brief	
 */
-sint8 nmi_get_otp_mac_address(uint8 *pu8MacAddr, uint8 * pu8IsValid);
+sint8 nmi_get_otp_mac_address(winc1500_t *dev, uint8 *pu8MacAddr, uint8 * pu8IsValid);
 /*
 *	@fn		nmi_get_mac_address
 *	@brief	
 */
-sint8 nmi_get_mac_address(uint8 *pu8MacAddr);
+sint8 nmi_get_mac_address(winc1500_t *dev, uint8 *pu8MacAddr);
 /*
 *	@fn		chip_apply_conf
 *	@brief	
 */
-sint8 chip_apply_conf(uint32 u32conf);
+sint8 chip_apply_conf(winc1500_t *dev, uint32 u32conf);
 
 #ifdef __cplusplus
 	 }

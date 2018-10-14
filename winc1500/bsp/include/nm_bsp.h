@@ -48,6 +48,8 @@
 #ifndef _NM_BSP_H_
 #define _NM_BSP_H_
 
+#include <stdint.h>
+
 #define NMI_API
 /*!< 
 *        Attribute used to define memory section to map Functions in host memory.
@@ -84,13 +86,7 @@
  *                     Used as a data type of ISR function registered by \ref nm_bsp_register_isr
  * @return         None
  */
-#if	defined(MODULE_NETDEV_ETH)
 typedef void (*tpfNmBspIsr)(void *arg);
-#else
-typedef void (*tpfNmBspIsr)(void);
-#endif
-
-#include <stdint.h>
 
   /*!
  * @ingroup DataTypes
@@ -137,6 +133,7 @@ typedef int32_t		sint32;
 
 #ifndef CORTUS_APP
 
+#include "winc1500.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -172,31 +169,31 @@ extern "C"{
  * @return       The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
  */
-sint8 nm_bsp_init(void);
+sint8 nm_bsp_init(winc1500_t *dev);
 /**@}*/
 
 
 /** @defgroup NmBspDeinitFn nm_bsp_deinit
 *    @ingroup BSPAPI
 *   	 De-initialization for BSP ((<strong>B</strong>oard <strong>S</strong>upport <strong>P</strong>ackage)). This function should be called only after
-*		 a successful call to nm_bsp_init. 
+*		 a successful call to nm_bsp_init.
 */
 /**@{*/
 /*!
 * @fn           sint8 nm_bsp_deinit(void);
 * @pre          The BSP should be initialized through \ref nm_bsp_init first.
 * @brief		 This function is used to de-initialize the BSP and turn off the WINC board.
-*				 
-*				 The nm_bsp_deinit is the last function that should be called after the application has finished and before the WINC is switched 
+*
+*				 The nm_bsp_deinit is the last function that should be called after the application has finished and before the WINC is switched
 *				 off. The function call turns off the WINC board by setting CHIP_EN and RESET_N signals low.Every function call of "nm_bsp_init" should
-*				 be matched with a call to nm_bsp_deinit. Failure to do so may result in the WINC consuming higher power than expected. 
+*				 be matched with a call to nm_bsp_deinit. Failure to do so may result in the WINC consuming higher power than expected.
 * @note         Implementation of this function is host dependent.
 * @warning      misuse may lead to unknown behavior in case of soft reset.\n
-* @see          nm_bsp_init               
+* @see          nm_bsp_init
 * @return      The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-sint8 nm_bsp_deinit(void);
+sint8 nm_bsp_deinit(winc1500_t *dev);
 /**@}*/
 
 
@@ -207,15 +204,15 @@ sint8 nm_bsp_deinit(void);
 */
 /**@{*/
 /*!
-* @fn           void nm_bsp_reset(void);    
+* @fn           void nm_bsp_reset(void);
 * @param [in]   None
 * @brief		 Applies a hardware reset to the WINC board.
 *				 The "nm_bsp_reset" is used to apply a hard reset to the WINC board by setting CHIP_EN and RESET_N signals low, then after specific delay
 *				 the function will put CHIP_EN high then RESET_N high, for the detailed timing between signals please review the WINC data-sheet. After a
-*				 successful call, the WINC board firmware will kick off to load and kick off the WINC firmware. This function should be called to reset the 
+*				 successful call, the WINC board firmware will kick off to load and kick off the WINC firmware. This function should be called to reset the
 *				 WINC firmware after the BSP is initialized and before the start of any communication with WINC board. Calling this function at any other time
-*				 will result in losing the state and connections saved in the WINC board and starting again from the initial state. The host driver will need 
-* 				 to be de-initialized before calling nm_bsp_reset and initialized again after it using the " m2m_wifi_(de)init". 
+*				 will result in losing the state and connections saved in the WINC board and starting again from the initial state. The host driver will need
+* 				 to be de-initialized before calling nm_bsp_reset and initialized again after it using the " m2m_wifi_(de)init".
 * @pre          Initialize \ref nm_bsp_init first
 * @note         Implementation of this function is host dependent and called by HIF layer.
 * @warning		 Calling this function will drop any connection and internal state saved on the WINC firmware.
@@ -223,14 +220,14 @@ sint8 nm_bsp_deinit(void);
 * @return       None
 
 */
-void nm_bsp_reset(void);
+void nm_bsp_reset(winc1500_t *dev);
 /**@}*/
 
 
 /** @defgroup NmBspSleepFn nm_bsp_sleep
 *     @ingroup BSPAPI
 *     Sleep in units of milliseconds.\n
-*    This function used by HIF Layer according to different situations. 
+*    This function used by HIF Layer according to different situations.
 */
 /**@{*/
 /*!
@@ -270,7 +267,7 @@ void nm_bsp_sleep(uint32 u32TimeMsec);
 * @return       None
 
 */
-void nm_bsp_register_isr(tpfNmBspIsr pfIsr);
+void nm_bsp_register_isr(winc1500_t *dev, tpfNmBspIsr pfIsr);
 /**@}*/
 
  
@@ -287,12 +284,12 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr);
 *               It an internal driver function and shouldn't be called by the application.
 * @param [in]   u8Enable
 *               '0' disable interrupts. '1' enable interrupts 
-* @see          tpfNmBspIsr, nm_bsp_register_isr     
+* @see          tpfNmBspIsr, nm_bsp_register_isr
 * @note         Implementation of this function is host dependent and called by HIF layer.
 * @return       None
 
 */
-void nm_bsp_interrupt_ctrl(uint8 u8Enable);
+void nm_bsp_interrupt_ctrl(winc1500_t *dev, uint8 u8Enable);
   /**@}*/
 
 #ifdef __cplusplus

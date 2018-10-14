@@ -118,7 +118,7 @@
  *	@brief	Enable spi flash operations
  *	@version	1.0
  */
-sint8 spi_flash_enable(uint8 enable);
+sint8 spi_flash_enable(winc1500_t *dev, uint8 enable);
 /** \defgroup SPIFLASHAPI Function
  *   @ingroup SPIFLASH
  */
@@ -133,7 +133,7 @@ sint8 spi_flash_enable(uint8 enable);
  * @note         Returned value in Mb (Mega Bit).
  * @return      SPI flash size in case of success and a ZERO value in case of failure.
  */
-uint32 spi_flash_get_size(void);
+uint32 spi_flash_get_size(winc1500_t *dev);
  /**@}*/
 
   /** @defgroup SPiFlashRead spi_flash_read
@@ -160,7 +160,7 @@ uint32 spi_flash_get_size(void);
  * @sa             m2m_wifi_download_mode, spi_flash_get_size
  * @return        The function returns @ref M2M_SUCCESS for successful operations  and a negative value otherwise.
  */
-sint8 spi_flash_read(uint8 *pu8Buf, uint32 u32Addr, uint32 u32Sz);
+sint8 spi_flash_read(winc1500_t *dev, uint8 *pu8Buf, uint32 u32Addr, uint32 u32Sz);
  /**@}*/
 
   /** @defgroup SPiFlashWrite spi_flash_write
@@ -191,7 +191,7 @@ sint8 spi_flash_read(uint8 *pu8Buf, uint32 u32Addr, uint32 u32Sz);
  * @return       The function returns @ref M2M_SUCCESS for successful operations  and a negative value otherwise.
  
  */
-sint8 spi_flash_write(uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz);
+sint8 spi_flash_write(winc1500_t *dev, uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz);
  /**@}*/
 
   /** @defgroup SPiFlashErase spi_flash_erase
@@ -217,6 +217,6 @@ sint8 spi_flash_write(uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz);
  * @return       The function returns @ref M2M_SUCCESS for successful operations  and a negative value otherwise.
 
  */
-sint8 spi_flash_erase(uint32 u32Offset, uint32 u32Sz);
+sint8 spi_flash_erase(winc1500_t *dev, uint32 u32Offset, uint32 u32Sz);
  /**@}*/
 #endif	//__SPI_FLASH_H__

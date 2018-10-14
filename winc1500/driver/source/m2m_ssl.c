@@ -39,10 +39,14 @@
  *
  */
 
+// Disabled when RIOT's network stack is used.
+#if	!defined(MODULE_NETDEV_ETH)
+
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 INCLUDES
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
 
+#include "bsp/include/nm_bsp.h"
 #include "driver/include/m2m_ssl.h"
 #include "driver/source/m2m_hif.h"
 #include "driver/source/nmasic.h"
@@ -54,8 +58,6 @@ MACROS
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 DATA TYPES
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
-static tpfAppSSLCb gpfAppSSLCb = NULL;
-static uint32 gu32HIFAddr = 0;
 
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 FUNCTION PROTOTYPES
@@ -71,23 +73,24 @@ FUNCTION PROTOTYPES
 	@param [in]	u32Addr
 				HIF address.
 */
-static void m2m_ssl_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
+static void m2m_ssl_cb(winc1500_t *dev, uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	(void)u16DataSize;
-	
+
 	sint8 s8tmp = M2M_SUCCESS;
 	switch(u8OpCode)
 	{
 		case M2M_SSL_REQ_ECC:
 		{
 			tstrEccReqInfo strEccREQ;
-			s8tmp = hif_receive(u32Addr, (uint8*)&strEccREQ, sizeof(tstrEccReqInfo), 0);
+			s8tmp = hif_receive(dev, u32Addr, (uint8*)&strEccREQ, sizeof(tstrEccReqInfo), 0);
 			if(s8tmp == M2M_SUCCESS)
 			{
-				if (gpfAppSSLCb)
+				if (internal->gpfAppSSLCb)
 				{
-					gu32HIFAddr = u32Addr + sizeof(tstrEccReqInfo);
-					gpfAppSSLCb(M2M_SSL_REQ_ECC, &strEccREQ);
+					internal->gu32HIFAddr = u32Addr + sizeof(tstrEccReqInfo);
+					internal->gpfAppSSLCb(dev, M2M_SSL_REQ_ECC, &strEccREQ);
 				}
 			}
 		}
@@ -95,11 +98,11 @@ static void m2m_ssl_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 		case M2M_SSL_RESP_SET_CS_LIST:
 		{
 			tstrSslSetActiveCsList strCsList;
-			s8tmp = hif_receive(u32Addr, (uint8*)&strCsList, sizeof(tstrSslSetActiveCsList), 0);
+			s8tmp = hif_receive(dev, u32Addr, (uint8*)&strCsList, sizeof(tstrSslSetActiveCsList), 0);
 			if(s8tmp == M2M_SUCCESS)
 			{
-				if (gpfAppSSLCb)
-					gpfAppSSLCb(M2M_SSL_RESP_SET_CS_LIST, &strCsList);
+				if (internal->gpfAppSSLCb)
+					internal->gpfAppSSLCb(dev, M2M_SSL_RESP_SET_CS_LIST, &strCsList);
 			}
 		}
 		break;
@@ -122,11 +125,11 @@ static void m2m_ssl_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 				Response data size.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_handshake_rsp(tstrEccReqInfo* strECCResp, uint8* pu8RspDataBuff, uint16 u16RspDataSz)
+NMI_API sint8 m2m_ssl_handshake_rsp(winc1500_t *dev, tstrEccReqInfo* strECCResp, uint8* pu8RspDataBuff, uint16 u16RspDataSz)
 {
 	sint8 s8Ret = M2M_SUCCESS;
-	
-	s8Ret = hif_send(M2M_REQ_GROUP_SSL, (M2M_SSL_RESP_ECC | M2M_REQ_DATA_PKT), (uint8*)strECCResp, sizeof(tstrEccReqInfo), pu8RspDataBuff, u16RspDataSz, sizeof(tstrEccReqInfo));
+
+	s8Ret = hif_send(dev, M2M_REQ_GROUP_SSL, (M2M_SSL_RESP_ECC | M2M_REQ_DATA_PKT), (uint8*)strECCResp, sizeof(tstrEccReqInfo), pu8RspDataBuff, u16RspDataSz, sizeof(tstrEccReqInfo));
 
 	return s8Ret;
 }
@@ -140,11 +143,11 @@ NMI_API sint8 m2m_ssl_handshake_rsp(tstrEccReqInfo* strECCResp, uint8* pu8RspDat
 				Size of the certificates.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_send_certs_to_winc(uint8* pu8Buffer, uint32 u32BufferSz)
+NMI_API sint8 m2m_ssl_send_certs_to_winc(winc1500_t *dev, uint8* pu8Buffer, uint32 u32BufferSz)
 {
 	sint8 s8Ret = M2M_SUCCESS;
 
-	s8Ret = hif_send(M2M_REQ_GROUP_SSL, (M2M_SSL_IND_CERTS_ECC | M2M_REQ_DATA_PKT), NULL, 0, pu8Buffer, u32BufferSz, 0);
+	s8Ret = hif_send(dev, M2M_REQ_GROUP_SSL, (M2M_SSL_IND_CERTS_ECC | M2M_REQ_DATA_PKT), NULL, 0, pu8Buffer, u32BufferSz, 0);
 
 	return s8Ret;
 }
@@ -162,39 +165,40 @@ NMI_API sint8 m2m_ssl_send_certs_to_winc(uint8* pu8Buffer, uint32 u32BufferSz)
 				Pointer to the certificate Key.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_retrieve_cert(uint16* pu16CurveType, uint8* pu8Hash, uint8* pu8Sig, tstrECPoint* pu8Key)
+NMI_API sint8 m2m_ssl_retrieve_cert(winc1500_t *dev, uint16* pu16CurveType, uint8* pu8Hash, uint8* pu8Sig, tstrECPoint* pu8Key)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	uint8	bSetRxDone	= 1;
 	uint16	u16HashSz, u16SigSz, u16KeySz;
 	sint8	s8Ret = M2M_SUCCESS;
 
-	if(gu32HIFAddr == 0) return M2M_ERR_FAIL;
-	
-	if(hif_receive(gu32HIFAddr, (uint8*)pu16CurveType, 2, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += 2;
+	if(internal->gu32HIFAddr == 0) return M2M_ERR_FAIL;
 
-	if(hif_receive(gu32HIFAddr, (uint8*)&u16KeySz, 2, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += 2;
+	if(hif_receive(dev, internal->gu32HIFAddr, (uint8*)pu16CurveType, 2, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += 2;
 
-	if(hif_receive(gu32HIFAddr, (uint8*)&u16HashSz, 2, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += 2;
+	if(hif_receive(dev, internal->gu32HIFAddr, (uint8*)&u16KeySz, 2, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += 2;
 
-	if(hif_receive(gu32HIFAddr, (uint8*)&u16SigSz, 2, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += 2;
+	if(hif_receive(dev, internal->gu32HIFAddr, (uint8*)&u16HashSz, 2, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += 2;
+
+	if(hif_receive(dev, internal->gu32HIFAddr, (uint8*)&u16SigSz, 2, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += 2;
 
 	(*pu16CurveType)= _htons((*pu16CurveType));
 	pu8Key->u16Size	= _htons(u16KeySz);
 	u16HashSz		= _htons(u16HashSz);
 	u16SigSz		= _htons(u16SigSz);
 	
-	if(hif_receive(gu32HIFAddr, pu8Key->X, pu8Key->u16Size * 2, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += (pu8Key->u16Size * 2);
+	if(hif_receive(dev, internal->gu32HIFAddr, pu8Key->X, pu8Key->u16Size * 2, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += (pu8Key->u16Size * 2);
 
-	if(hif_receive(gu32HIFAddr, pu8Hash, u16HashSz, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += u16HashSz;
+	if(hif_receive(dev, internal->gu32HIFAddr, pu8Hash, u16HashSz, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += u16HashSz;
 
-	if(hif_receive(gu32HIFAddr, pu8Sig, u16SigSz, 0) != M2M_SUCCESS) goto __ERR;
-	gu32HIFAddr += u16SigSz;
+	if(hif_receive(dev, internal->gu32HIFAddr, pu8Sig, u16SigSz, 0) != M2M_SUCCESS) goto __ERR;
+	internal->gu32HIFAddr += u16SigSz;
 	
 	bSetRxDone = 0;
 
@@ -202,7 +206,7 @@ __ERR:
 	if(bSetRxDone)
 	{
 		s8Ret = M2M_ERR_FAIL;
-		hif_receive(0, NULL, 0, 1);
+		hif_receive(dev, 0, NULL, 0, 1);
 	}
 	return s8Ret;
 }
@@ -216,14 +220,15 @@ __ERR:
 				Hash size.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_retrieve_hash(uint8* pu8Hash, uint16 u16HashSz)
+NMI_API sint8 m2m_ssl_retrieve_hash(winc1500_t *dev, uint8* pu8Hash, uint16 u16HashSz)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	uint8	bSetRxDone	= 1;
 	sint8	s8Ret = M2M_SUCCESS;
 
-	if(gu32HIFAddr == 0) return M2M_ERR_FAIL;
+	if(internal->gu32HIFAddr == 0) return M2M_ERR_FAIL;
 
-	if(hif_receive(gu32HIFAddr, pu8Hash, u16HashSz, 0) != M2M_SUCCESS) goto __ERR;
+	if(hif_receive(dev, internal->gu32HIFAddr, pu8Hash, u16HashSz, 0) != M2M_SUCCESS) goto __ERR;
 	
 	bSetRxDone = 0;
 
@@ -231,7 +236,7 @@ __ERR:
 	if(bSetRxDone)
 	{
 		s8Ret = M2M_ERR_FAIL;
-		hif_receive(0, NULL, 0, 1);
+		hif_receive(dev, 0, NULL, 0, 1);
 	}
 	return s8Ret;
 }
@@ -240,18 +245,19 @@ __ERR:
 	@fn	\	m2m_ssl_stop_processing_certs(void)
 	@brief	Stops receiving from the HIF
 */
-NMI_API void m2m_ssl_stop_processing_certs(void)
+NMI_API void m2m_ssl_stop_processing_certs(winc1500_t *dev)
 {
-	hif_receive(0, NULL, 0, 1);
+	hif_receive(dev, 0, NULL, 0, 1);
 }
 
 /*!
 	@fn	\	m2m_ssl_ecc_process_done(void)
 	@brief	Stops receiving from the HIF
 */
-NMI_API void m2m_ssl_ecc_process_done(void)
+NMI_API void m2m_ssl_ecc_process_done(winc1500_t *dev)
 {
-	gu32HIFAddr = 0;
+	winc1500_internal_t *internal = &dev->internal;
+	internal->gu32HIFAddr = 0;
 }
 
 /*!
@@ -274,13 +280,13 @@ NMI_API void m2m_ssl_ecc_process_done(void)
 	- [SOCK_ERR_NO_ERROR](@ref SOCK_ERR_NO_ERROR)
 	- [SOCK_ERR_INVALID_ARG](@ref SOCK_ERR_INVALID_ARG)
 */
-sint8 m2m_ssl_set_active_ciphersuites(uint32 u32SslCsBMP)
+sint8 m2m_ssl_set_active_ciphersuites(winc1500_t *dev, uint32 u32SslCsBMP)
 {
 	sint8 s8Ret = M2M_SUCCESS;
 	tstrSslSetActiveCsList	strCsList;
-	
+
 	strCsList.u32CsBMP = u32SslCsBMP;
-	s8Ret = hif_send(M2M_REQ_GROUP_SSL, M2M_SSL_REQ_SET_CS_LIST, (uint8*)&strCsList, sizeof(tstrSslSetActiveCsList), NULL, 0, 0);
+	s8Ret = hif_send(dev, M2M_REQ_GROUP_SSL, M2M_SSL_REQ_SET_CS_LIST, (uint8*)&strCsList, sizeof(tstrSslSetActiveCsList), NULL, 0, 0);
 
 	return s8Ret;
 }
@@ -292,17 +298,20 @@ sint8 m2m_ssl_set_active_ciphersuites(uint32 u32SslCsBMP)
 	Application SSL callback function.
 	@return		The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ssl_init(tpfAppSSLCb pfAppSSLCb)
+NMI_API sint8 m2m_ssl_init(winc1500_t *dev, tpfAppSSLCb pfAppSSLCb)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 s8Ret = M2M_SUCCESS;
 
-	gpfAppSSLCb = pfAppSSLCb;
-	gu32HIFAddr = 0;
+	internal->gpfAppSSLCb = pfAppSSLCb;
+	internal->gu32HIFAddr = 0;
 
-	s8Ret = hif_register_cb(M2M_REQ_GROUP_SSL,m2m_ssl_cb);
+	s8Ret = hif_register_cb(dev, M2M_REQ_GROUP_SSL,m2m_ssl_cb);
 	if (s8Ret != M2M_SUCCESS)
 	{
 		M2M_ERR("hif_register_cb() failed with ret=%d", s8Ret);
 	}
 	return s8Ret;
 }
+
+#endif	// !defined(MODULE_NETDEV_ETH)

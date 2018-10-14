@@ -201,7 +201,7 @@ typedef struct{
 *           SHA256 IMPLEMENTATION           *
 *======*======*======*======*======*========*/
 
-sint8 m2m_crypto_sha256_hash_init(tstrM2mSha256Ctxt *pstrSha256Ctxt)
+sint8 m2m_crypto_sha256_hash_init(winc1500_t *dev, tstrM2mSha256Ctxt *pstrSha256Ctxt)
 {
 	tstrSHA256HashCtxt	*pstrSHA256 = (tstrSHA256HashCtxt*)pstrSha256Ctxt;
 	if(pstrSHA256 != NULL)
@@ -212,7 +212,7 @@ sint8 m2m_crypto_sha256_hash_init(tstrM2mSha256Ctxt *pstrSha256Ctxt)
 	return 0;
 }
 
-sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu8Data, uint16 u16DataLength)
+sint8 m2m_crypto_sha256_hash_update(winc1500_t *dev, tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu8Data, uint16 u16DataLength)
 {
 	sint8	s8Ret = M2M_ERR_FAIL;
 	tstrSHA256HashCtxt	*pstrSHA256 = (tstrSHA256HashCtxt*)pstrSha256Ctxt;
@@ -242,7 +242,7 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 				pu8Data			+= u32Offset;
 				u16DataLength	-= u32Offset;
 
-				nm_write_block(u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
+				nm_write_block(dev, u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
 				u32Addr += SHA_BLOCK_SIZE;
 				u32CurrentBlock	 = 1;
 			}
@@ -259,7 +259,7 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 
 		if(u32NBlocks != 0)
 		{
-			nm_write_block(u32Addr, pu8Data, (uint16)(u32NBlocks * SHA_BLOCK_SIZE));
+			nm_write_block(dev, u32Addr, pu8Data, (uint16)(u32NBlocks * SHA_BLOCK_SIZE));
 			pu8Data += (u32NBlocks * SHA_BLOCK_SIZE);
 		}
 
@@ -268,9 +268,9 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 		{
 			uint32	u32RegVal = 0;
 
-			nm_write_reg(SHA256_CTRL, u32RegVal);
+			nm_write_reg(dev, SHA256_CTRL, u32RegVal);
 			u32RegVal |= SHA256_CTRL_FORCE_SHA256_QUIT_MASK;
-			nm_write_reg(SHA256_CTRL, u32RegVal);
+			nm_write_reg(dev, SHA256_CTRL, u32RegVal);
 
 			if(pstrSHA256->u8InitHashFlag)
 			{
@@ -279,21 +279,21 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 			}
 
 			u32ReadAddr = u32WriteAddr + (u32NBlocks * SHA_BLOCK_SIZE);
-			nm_write_reg(SHA256_DATA_LENGTH, (u32NBlocks * SHA_BLOCK_SIZE));
-			nm_write_reg(SHA256_START_RD_ADDR, u32WriteAddr);
-			nm_write_reg(SHA256_START_WR_ADDR, u32ReadAddr);
+			nm_write_reg(dev, SHA256_DATA_LENGTH, (u32NBlocks * SHA_BLOCK_SIZE));
+			nm_write_reg(dev, SHA256_START_RD_ADDR, u32WriteAddr);
+			nm_write_reg(dev, SHA256_START_WR_ADDR, u32ReadAddr);
 
 			u32RegVal |= SHA256_CTRL_START_CALC_MASK;
 
 			u32RegVal &= ~(0x7 << 8);
 			u32RegVal |= (2 << 8);
 
-			nm_write_reg(SHA256_CTRL, u32RegVal);
+			nm_write_reg(dev, SHA256_CTRL, u32RegVal);
 
 			/* 5.	Wait for done_intr */
 			while(!u8IsDone)
 			{
-				u32RegVal = nm_read_reg(SHA256_DONE_INTR_STS);
+				u32RegVal = nm_read_reg(dev, SHA256_DONE_INTR_STS);
 				u8IsDone = u32RegVal & NBIT0;
 			}
 		}
@@ -307,7 +307,7 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 }
 
 
-sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu8Sha256Digest)
+sint8 m2m_crypto_sha256_hash_finish(winc1500_t *dev, tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu8Sha256Digest)
 {
 	sint8	s8Ret = M2M_ERR_FAIL;
 	tstrSHA256HashCtxt	*pstrSHA256 = (tstrSHA256HashCtxt*)pstrSha256Ctxt;
@@ -324,9 +324,9 @@ sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 		uint32	au32Digest[M2M_SHA256_DIGEST_LEN / 4];
 		uint8	u8IsDone		= 0;
 
-		nm_write_reg(SHA256_CTRL,u32RegVal);
+		nm_write_reg(dev, SHA256_CTRL,u32RegVal);
 		u32RegVal |= SHA256_CTRL_FORCE_SHA256_QUIT_MASK;
-		nm_write_reg(SHA256_CTRL,u32RegVal);
+		nm_write_reg(dev, SHA256_CTRL,u32RegVal);
 
 		if(pstrSHA256->u8InitHashFlag)
 		{
@@ -351,7 +351,7 @@ sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 		*/
 		if(u16PaddingLength < 8)
 		{
-			nm_write_block(u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
+			nm_write_block(dev, u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
 			u32Addr += SHA_BLOCK_SIZE;
 			m2m_memset(pstrSHA256->au8CurrentBlock, 0, SHA_BLOCK_SIZE);
 			u16NBlocks ++;
@@ -361,26 +361,26 @@ sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 		PUTU32(pstrSHA256->u32TotalLength << 3, pstrSHA256->au8CurrentBlock, (SHA_BLOCK_SIZE - 4));
 
 		u32ReadAddr = u32WriteAddr + (u16NBlocks * SHA_BLOCK_SIZE);
-		nm_write_block(u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
-		nm_write_reg(SHA256_DATA_LENGTH, (u16NBlocks * SHA_BLOCK_SIZE));
-		nm_write_reg(SHA256_START_RD_ADDR, u32WriteAddr);
-		nm_write_reg(SHA256_START_WR_ADDR, u32ReadAddr);
+		nm_write_block(dev, u32Addr, pstrSHA256->au8CurrentBlock, SHA_BLOCK_SIZE);
+		nm_write_reg(dev, SHA256_DATA_LENGTH, (u16NBlocks * SHA_BLOCK_SIZE));
+		nm_write_reg(dev, SHA256_START_RD_ADDR, u32WriteAddr);
+		nm_write_reg(dev, SHA256_START_WR_ADDR, u32ReadAddr);
 
 		u32RegVal |= SHA256_CTRL_START_CALC_MASK;
 		u32RegVal |= SHA256_CTRL_WR_BACK_HASH_VALUE_MASK;
 		u32RegVal &= ~(0x7UL << 8);
 		u32RegVal |= (0x2UL << 8);
 
-		nm_write_reg(SHA256_CTRL,u32RegVal);
+		nm_write_reg(dev, SHA256_CTRL,u32RegVal);
 
 
 		/* 5.	Wait for done_intr */
 		while(!u8IsDone)
 		{
-			u32RegVal = nm_read_reg(SHA256_DONE_INTR_STS);
+			u32RegVal = nm_read_reg(dev, SHA256_DONE_INTR_STS);
 			u8IsDone = u32RegVal & NBIT0;
 		}
-		nm_read_block(u32ReadAddr, (uint8*)au32Digest, 32);
+		nm_read_block(dev, u32ReadAddr, (uint8*)au32Digest, 32);
 		
 		/* Convert the output words to an array of bytes.
 		*/
@@ -402,7 +402,7 @@ sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *pstrSha256Ctxt, uint8 *pu
 *             RSA IMPLEMENTATION            *
 *======*======*======*======*======*========*/
 
-static void FlipBuffer(uint8 *pu8InBuffer, uint8 *pu8OutBuffer, uint16 u16BufferSize)
+static void FlipBuffer(winc1500_t *dev, uint8 *pu8InBuffer, uint8 *pu8OutBuffer, uint16 u16BufferSize)
 {
 	uint16	u16Idx;
 	for(u16Idx = 0; u16Idx < u16BufferSize; u16Idx ++)
@@ -416,7 +416,8 @@ static void FlipBuffer(uint8 *pu8InBuffer, uint8 *pu8OutBuffer, uint16 u16Buffer
 }
 
 void BigInt_ModExp
-(	
+(
+ winc1500_t *dev,
  uint8	*pu8X,	uint16	u16XSize,
  uint8	*pu8E,	uint16	u16ESize,
  uint8	*pu8M,	uint16	u16MSize,
@@ -445,22 +446,22 @@ void BigInt_ModExp
 	*/
 	u32Reg	= 0;
 	u32Reg	|= BIGINT_MISC_CTRL_CTL_RESET;
-	u32Reg	= nm_read_reg(BIGINT_MISC_CTRL);
+	u32Reg	= nm_read_reg(dev, BIGINT_MISC_CTRL);
 	u32Reg	&= ~BIGINT_MISC_CTRL_CTL_RESET;
-	u32Reg = nm_read_reg(BIGINT_MISC_CTRL);
+	u32Reg = nm_read_reg(dev, BIGINT_MISC_CTRL);
 
-	nm_write_block(u32RAddr,au8Tmp, u16RSize);
+	nm_write_block(dev, u32RAddr,au8Tmp, u16RSize);
 
 	/* Write Input Operands to Chip Memory. 
 	*/
 	/*------- X -------*/
-	FlipBuffer(pu8X,au8Tmp,u16XSize);
-	nm_write_block(u32XAddr,au8Tmp,u16XSizeWords * 4);
+	FlipBuffer(dev, pu8X,au8Tmp,u16XSize);
+	nm_write_block(dev, u32XAddr,au8Tmp,u16XSizeWords * 4);
 
 	/*------- E -------*/
 	m2m_memset(au8Tmp, 0, sizeof(au8Tmp));
-	FlipBuffer(pu8E, au8Tmp, u16ESize);
-	nm_write_block(u32EAddr, au8Tmp, u16ESizeWords * 4);
+	FlipBuffer(dev, pu8E, au8Tmp, u16ESize);
+	nm_write_block(dev, u32EAddr, au8Tmp, u16ESizeWords * 4);
 	u32Exponent = GET_UINT32(au8Tmp, (u16ESizeWords * 4) - 4);
 	while((u32Exponent & NBIT31)== 0)
 	{
@@ -470,51 +471,51 @@ void BigInt_ModExp
 
 	/*------- M -------*/
 	m2m_memset(au8Tmp, 0, sizeof(au8Tmp));
-	FlipBuffer(pu8M, au8Tmp, u16XSize);
-	nm_write_block(u32MAddr, au8Tmp, u16XSizeWords * 4);
+	FlipBuffer(dev, pu8M, au8Tmp, u16XSize);
+	nm_write_block(dev, u32MAddr, au8Tmp, u16XSizeWords * 4);
 
 	/* Program the addresses of the input operands. 
 	*/
-	nm_write_reg(BIGINT_ADDR_X, u32XAddr);
-	nm_write_reg(BIGINT_ADDR_E, u32EAddr);
-	nm_write_reg(BIGINT_ADDR_M, u32MAddr);
-	nm_write_reg(BIGINT_ADDR_R, u32RAddr);
+	nm_write_reg(dev, BIGINT_ADDR_X, u32XAddr);
+	nm_write_reg(dev, BIGINT_ADDR_E, u32EAddr);
+	nm_write_reg(dev, BIGINT_ADDR_M, u32MAddr);
+	nm_write_reg(dev, BIGINT_ADDR_R, u32RAddr);
 
 	/* Mprime. 
 	*/
-	nm_write_reg(BIGINT_M_PRIME,u32Mprime);
+	nm_write_reg(dev, BIGINT_M_PRIME,u32Mprime);
 
 	/* Length. 
 	*/
 	u32Reg	= (u16XSizeWords & 0xFF);
 	u32Reg += ((u16ESizeWords & 0xFF) << 8);
 	u32Reg += (u8EMswBits << 16);
-	nm_write_reg(BIGINT_LENGTH,u32Reg);
+	nm_write_reg(dev, BIGINT_LENGTH,u32Reg);
 
 	/* CTRL Register. 
 	*/
-	u32Reg = nm_read_reg(BIGINT_MISC_CTRL);
+	u32Reg = nm_read_reg(dev, BIGINT_MISC_CTRL);
 	u32Reg ^= BIGINT_MISC_CTRL_CTL_START;
 	u32Reg |= BIGINT_MISC_CTRL_CTL_FORCE_BARRETT;
 	//u32Reg |= BIGINT_MISC_CTRL_CTL_M_PRIME_VALID;
 #if ENABLE_FLIPPING == 0
 	u32Reg |= BIGINT_MISC_CTRL_CTL_MSW_FIRST;
 #endif
-	nm_write_reg(BIGINT_MISC_CTRL,u32Reg);
+	nm_write_reg(dev, BIGINT_MISC_CTRL,u32Reg);
 
 	/* Wait for computation to complete. */
 	while(1)
 	{
-		u32Reg = nm_read_reg(BIGINT_IRQ_STS);
+		u32Reg = nm_read_reg(dev, BIGINT_IRQ_STS);
 		if(u32Reg & BIGINT_IRQ_STS_DONE)
 		{
 			break;
 		}
 	}
-	nm_write_reg(BIGINT_IRQ_STS,0);
+	nm_write_reg(dev, BIGINT_IRQ_STS,0);
 	m2m_memset(au8Tmp, 0, sizeof(au8Tmp));
-	nm_read_block(u32RAddr, au8Tmp, u16RSize);
-	FlipBuffer(au8Tmp, pu8R, u16RSize);
+	nm_read_block(dev, u32RAddr, au8Tmp, u16RSize);
+	FlipBuffer(dev, au8Tmp, pu8R, u16RSize);
 }
 
 
@@ -551,7 +552,7 @@ static const uint8 au8TEncodingSHA2[] =
 */
 
 
-sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint16 u16ESize, uint8 *pu8SignedMsgHash, 
+sint8 m2m_crypto_rsa_sign_verify(winc1500_t *dev, uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint16 u16ESize, uint8 *pu8SignedMsgHash,
 						  uint16 u16HashLength, uint8 *pu8RsaSignature)
 {
 	sint8		s8Ret = M2M_RSA_SIGN_FAIL;
@@ -590,7 +591,7 @@ sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint
 			/*
 			RSA verification
 			*/
-			BigInt_ModExp(pu8RsaSignature, u16NSize, pu8E, u16ESize, pu8N, u16NSize, au8EM, u16NSize);
+			BigInt_ModExp(dev, pu8RsaSignature, u16NSize, pu8E, u16ESize, pu8N, u16NSize, au8EM, u16NSize);
 
 			u32PSLength = u16NSize - u16TLength - 3;
 
@@ -624,7 +625,7 @@ sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint
 }
 
 
-sint8 m2m_crypto_rsa_sign_gen(uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 u16dSize, uint8 *pu8SignedMsgHash, 
+sint8 m2m_crypto_rsa_sign_gen(winc1500_t *dev, uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 u16dSize, uint8 *pu8SignedMsgHash,
 					   uint16 u16HashLength, uint8 *pu8RsaSignature)
 {
 	sint8		s8Ret = M2M_RSA_SIGN_FAIL;
@@ -683,7 +684,7 @@ sint8 m2m_crypto_rsa_sign_gen(uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 
 			/*
 			RSA Signature Generation
 			*/
-			BigInt_ModExp(au8EM, u16NSize, pu8d, u16dSize, pu8N, u16NSize, pu8RsaSignature, u16NSize);
+			BigInt_ModExp(dev, au8EM, u16NSize, pu8d, u16dSize, pu8N, u16NSize, pu8RsaSignature, u16NSize);
 			s8Ret = M2M_RSA_SIGN_OK;
 		}
 	}
@@ -694,12 +695,6 @@ sint8 m2m_crypto_rsa_sign_gen(uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 
 
 #ifdef CONF_CRYPTO_SOFT
 
-typedef struct {
-	tpfAppCryproCb pfAppCryptoCb;
-	uint8 * pu8Digest;
-	uint8 * pu8Rsa;
-	uint8 u8CryptoBusy;
-}tstrCryptoCtxt;
 
 typedef struct {
 	uint8 au8N[M2M_MAX_RSA_LEN];
@@ -710,8 +705,6 @@ typedef struct {
 	uint16 u16Hsz;
 	uint8 _pad16_[2];
 }tstrRsaPayload;
-
-static tstrCryptoCtxt gstrCryptoCtxt;
 
 
 /**
@@ -727,33 +720,34 @@ static tstrCryptoCtxt gstrCryptoCtxt;
 *	@date
 *	@version	1.0
 */
-static void m2m_crypto_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
+static void m2m_crypto_cb(winc1500_t *dev, uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 ret = M2M_SUCCESS;
-	gstrCryptoCtxt.u8CryptoBusy = 0;
+	internal->gstrCryptoCtxt.u8CryptoBusy = 0;
 	if(u8OpCode == M2M_CRYPTO_RESP_SHA256_INIT)
 	{
 		tstrM2mSha256Ctxt strCtxt;	
-		if (hif_receive(u32Addr, (uint8*) &strCtxt,sizeof(tstrM2mSha256Ctxt), 0) == M2M_SUCCESS)
+		if (hif_receive(dev, u32Addr, (uint8*) &strCtxt,sizeof(tstrM2mSha256Ctxt), 0) == M2M_SUCCESS)
 		{	
 			tstrCyptoResp strResp;	
-			if(hif_receive(u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
+			if(hif_receive(dev, u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
 			{
-				if (gstrCryptoCtxt.pfAppCryptoCb)
-					gstrCryptoCtxt.pfAppCryptoCb(u8OpCode,&strResp,&strCtxt);
+				if (internal->gstrCryptoCtxt.pfAppCryptoCb)
+					internal->gstrCryptoCtxt.pfAppCryptoCb(dev, u8OpCode,&strResp,&strCtxt);
 			}
 		}
 	}
 	else if(u8OpCode == M2M_CRYPTO_RESP_SHA256_UPDATE)
 	{
 		tstrM2mSha256Ctxt strCtxt;
-		if (hif_receive(u32Addr, (uint8*) &strCtxt,sizeof(tstrM2mSha256Ctxt), 0) == M2M_SUCCESS)
+		if (hif_receive(dev, u32Addr, (uint8*) &strCtxt,sizeof(tstrM2mSha256Ctxt), 0) == M2M_SUCCESS)
 		{
 			tstrCyptoResp strResp;
-			if (hif_receive(u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
+			if (hif_receive(dev, u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
 			{
-				if (gstrCryptoCtxt.pfAppCryptoCb)
-					gstrCryptoCtxt.pfAppCryptoCb(u8OpCode,&strResp,&strCtxt);
+				if (internal->gstrCryptoCtxt.pfAppCryptoCb)
+					internal->gstrCryptoCtxt.pfAppCryptoCb(dev, u8OpCode,&strResp,&strCtxt);
 			}
 		}
 
@@ -761,12 +755,12 @@ static void m2m_crypto_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 	else if(u8OpCode == M2M_CRYPTO_RESP_SHA256_FINSIH)
 	{
 		tstrCyptoResp strResp;
-		if (hif_receive(u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 0) == M2M_SUCCESS)
+		if (hif_receive(dev, u32Addr + sizeof(tstrM2mSha256Ctxt), (uint8*) &strResp,sizeof(tstrCyptoResp), 0) == M2M_SUCCESS)
 		{
-			if (hif_receive(u32Addr + sizeof(tstrM2mSha256Ctxt) + sizeof(tstrCyptoResp), (uint8*)gstrCryptoCtxt.pu8Digest,M2M_SHA256_DIGEST_LEN, 1) == M2M_SUCCESS)
+			if (hif_receive(dev, u32Addr + sizeof(tstrM2mSha256Ctxt) + sizeof(tstrCyptoResp), (uint8*)internal->gstrCryptoCtxt.pu8Digest,M2M_SHA256_DIGEST_LEN, 1) == M2M_SUCCESS)
 			{
-				if (gstrCryptoCtxt.pfAppCryptoCb)
-					gstrCryptoCtxt.pfAppCryptoCb(u8OpCode,&strResp,gstrCryptoCtxt.pu8Digest);
+				if (internal->gstrCryptoCtxt.pfAppCryptoCb)
+					internal->gstrCryptoCtxt.pfAppCryptoCb(dev, u8OpCode,&strResp,internal->gstrCryptoCtxt.pu8Digest);
 				
 			}
 		}
@@ -774,22 +768,22 @@ static void m2m_crypto_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 	else if(u8OpCode == M2M_CRYPTO_RESP_RSA_SIGN_GEN)
 	{
 		tstrCyptoResp strResp;
-		if (hif_receive(u32Addr + sizeof(tstrRsaPayload), (uint8*)&strResp,sizeof(tstrCyptoResp), 0) == M2M_SUCCESS)
+		if (hif_receive(dev, u32Addr + sizeof(tstrRsaPayload), (uint8*)&strResp,sizeof(tstrCyptoResp), 0) == M2M_SUCCESS)
 		{
-			if (hif_receive(u32Addr + sizeof(tstrRsaPayload) + sizeof(tstrCyptoResp), (uint8*)gstrCryptoCtxt.pu8Rsa,M2M_MAX_RSA_LEN, 0) == M2M_SUCCESS)
+			if (hif_receive(dev, u32Addr + sizeof(tstrRsaPayload) + sizeof(tstrCyptoResp), (uint8*)internal->gstrCryptoCtxt.pu8Rsa,M2M_MAX_RSA_LEN, 0) == M2M_SUCCESS)
 			{
-				if (gstrCryptoCtxt.pfAppCryptoCb)
-					gstrCryptoCtxt.pfAppCryptoCb(u8OpCode,&strResp,gstrCryptoCtxt.pu8Rsa);
+				if (internal->gstrCryptoCtxt.pfAppCryptoCb)
+					internal->gstrCryptoCtxt.pfAppCryptoCb(dev, u8OpCode,&strResp,internal->gstrCryptoCtxt.pu8Rsa);
 			}
 		}
 	}
 	else if(u8OpCode == M2M_CRYPTO_RESP_RSA_SIGN_VERIFY)
 	{
 		tstrCyptoResp strResp;
-		if (hif_receive(u32Addr + sizeof(tstrRsaPayload), (uint8*)&strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
+		if (hif_receive(dev, u32Addr + sizeof(tstrRsaPayload), (uint8*)&strResp,sizeof(tstrCyptoResp), 1) == M2M_SUCCESS)
 		{
-			if (gstrCryptoCtxt.pfAppCryptoCb)
-				gstrCryptoCtxt.pfAppCryptoCb(u8OpCode,&strResp,NULL);
+			if (internal->gstrCryptoCtxt.pfAppCryptoCb)
+				internal->gstrCryptoCtxt.pfAppCryptoCb(dev, u8OpCode,&strResp,NULL);
 		}
 	}
 	else 
@@ -807,14 +801,15 @@ static void m2m_crypto_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 @param[in]	pfAppCryproCb
 
 */
-sint8 m2m_crypto_init(tpfAppCryproCb pfAppCryproCb)
+sint8 m2m_crypto_init(winc1500_t *dev, tpfAppCryproCb pfAppCryproCb)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 ret = M2M_ERR_FAIL;
-	m2m_memset((uint8*)&gstrCryptoCtxt,0,sizeof(tstrCryptoCtxt));
+	m2m_memset((uint8*)&internal->gstrCryptoCtxt,0,sizeof(tstrCryptoCtxt));
 	if(pfAppCryproCb != NULL)
 	{
-		gstrCryptoCtxt.pfAppCryptoCb = pfAppCryproCb;
-		ret = hif_register_cb(M2M_REQ_GROUP_CRYPTO,m2m_crypto_cb);
+		internal->gstrCryptoCtxt.pfAppCryptoCb = pfAppCryproCb;
+		ret = hif_register_cb(dev, M2M_REQ_GROUP_CRYPTO,m2m_crypto_cb);
 	}
 	return ret;
 }
@@ -827,12 +822,13 @@ sint8 m2m_crypto_init(tpfAppCryproCb pfAppCryproCb)
 @param[in]	psha256Ctxt
 				Pointer to a sha256 context allocated by the caller.
 */
-sint8 m2m_crypto_sha256_hash_init(tstrM2mSha256Ctxt *psha256Ctxt)
+sint8 m2m_crypto_sha256_hash_init(winc1500_t *dev, tstrM2mSha256Ctxt *psha256Ctxt)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8  ret = M2M_ERR_FAIL;
-	if((psha256Ctxt != NULL)&&(!gstrCryptoCtxt.u8CryptoBusy))
+	if((psha256Ctxt != NULL)&&(!internal->gstrCryptoCtxt.u8CryptoBusy))
 	{
-		ret = hif_send(M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_INIT|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),NULL,0,0);
+		ret = hif_send(dev, M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_INIT|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),NULL,0,0);
 	}
 	return ret;
 }
@@ -853,12 +849,13 @@ sint8 m2m_crypto_sha256_hash_init(tstrM2mSha256Ctxt *psha256Ctxt)
 @param [in]	u16DataLength
 				Size of the data bufefr in bytes.
 */
-sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Data, uint16 u16DataLength)
+sint8 m2m_crypto_sha256_hash_update(winc1500_t *dev, tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Data, uint16 u16DataLength)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8  ret = M2M_ERR_FAIL;
-	if((!gstrCryptoCtxt.u8CryptoBusy) && (psha256Ctxt != NULL) && (pu8Data != NULL) && (u16DataLength < M2M_SHA256_MAX_DATA))
+	if((!internal->gstrCryptoCtxt.u8CryptoBusy) && (psha256Ctxt != NULL) && (pu8Data != NULL) && (u16DataLength < M2M_SHA256_MAX_DATA))
 	{
-		ret = hif_send(M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_UPDATE|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),pu8Data,u16DataLength,sizeof(tstrM2mSha256Ctxt) + sizeof(tstrCyptoResp));
+		ret = hif_send(dev, M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_UPDATE|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),pu8Data,u16DataLength,sizeof(tstrM2mSha256Ctxt) + sizeof(tstrCyptoResp));
 	}
 	return ret;
 	
@@ -877,13 +874,14 @@ sint8 m2m_crypto_sha256_hash_update(tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Da
 @param [in] pu8Sha256Digest
 				Buffer allocated by the caller which will hold the resultant SHA256 Digest. It must be allocated no less than M2M_SHA256_DIGEST_LEN.
 */
-sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Sha256Digest)
+sint8 m2m_crypto_sha256_hash_finish(winc1500_t *dev, tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Sha256Digest)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8  ret = M2M_ERR_FAIL;
-	if((!gstrCryptoCtxt.u8CryptoBusy) && (psha256Ctxt != NULL) && (pu8Sha256Digest != NULL))
+	if((!internal->gstrCryptoCtxt.u8CryptoBusy) && (psha256Ctxt != NULL) && (pu8Sha256Digest != NULL))
 	{
-		gstrCryptoCtxt.pu8Digest = pu8Sha256Digest;
-		ret = hif_send(M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_FINSIH|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),NULL,0,0);
+		internal->gstrCryptoCtxt.pu8Digest = pu8Sha256Digest;
+		ret = hif_send(dev, M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_SHA256_FINSIH|M2M_REQ_DATA_PKT,(uint8*)psha256Ctxt,sizeof(tstrM2mSha256Ctxt),NULL,0,0);
 	}
 	return ret;
 }
@@ -925,11 +923,12 @@ sint8 m2m_crypto_sha256_hash_finish(tstrM2mSha256Ctxt *psha256Ctxt, uint8 *pu8Sh
 */
 
 
-sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint16 u16ESize, uint8 *pu8SignedMsgHash, 
+sint8 m2m_crypto_rsa_sign_verify(winc1500_t *dev, uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint16 u16ESize, uint8 *pu8SignedMsgHash,
 						  uint16 u16HashLength, uint8 *pu8RsaSignature)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 ret = M2M_ERR_FAIL;
-	if((!gstrCryptoCtxt.u8CryptoBusy) && (pu8N != NULL) && (pu8E != NULL) && (pu8RsaSignature != NULL) && (pu8SignedMsgHash != NULL) 
+	if((!internal->gstrCryptoCtxt.u8CryptoBusy) && (pu8N != NULL) && (pu8E != NULL) && (pu8RsaSignature != NULL) && (pu8SignedMsgHash != NULL)
 	&& (u16NSize != 0) && (u16ESize != 0) && (u16HashLength != 0) && (pu8RsaSignature != NULL) )
 	
 	{
@@ -943,7 +942,7 @@ sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint
 		strRsa.u16Hsz = u16HashLength;
 		strRsa.u16Nsz = u16NSize;
 		
-		ret = hif_send(M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_RSA_SIGN_VERIFY|M2M_REQ_DATA_PKT,(uint8*)&strRsa,sizeof(tstrRsaPayload),NULL,0,0);
+		ret = hif_send(dev, M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_RSA_SIGN_VERIFY|M2M_REQ_DATA_PKT,(uint8*)&strRsa,sizeof(tstrRsaPayload),NULL,0,0);
 		
 	}
 	return ret;
@@ -982,11 +981,12 @@ sint8 m2m_crypto_rsa_sign_verify(uint8 *pu8N, uint16 u16NSize, uint8 *pu8E, uint
 @param[out] pu8RsaSignature
 				Pointer to a user buffer allocated by teh caller shall hold the generated signature.
 */
-sint8 m2m_crypto_rsa_sign_gen(uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 u16dSize, uint8 *pu8SignedMsgHash, 
+sint8 m2m_crypto_rsa_sign_gen(winc1500_t *dev, uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 u16dSize, uint8 *pu8SignedMsgHash, 
 					   uint16 u16HashLength, uint8 *pu8RsaSignature)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 ret = M2M_ERR_FAIL;
-	if((!gstrCryptoCtxt.u8CryptoBusy) && (pu8N != NULL) && (pu8d != NULL) && (pu8RsaSignature != NULL) && (pu8SignedMsgHash != NULL)
+	if((!internal->gstrCryptoCtxt.u8CryptoBusy) && (pu8N != NULL) && (pu8d != NULL) && (pu8RsaSignature != NULL) && (pu8SignedMsgHash != NULL)
 	&& (u16NSize != 0) && (u16dSize != 0) && (u16HashLength != 0) && (pu8RsaSignature != NULL))
 	
 	{
@@ -1000,8 +1000,8 @@ sint8 m2m_crypto_rsa_sign_gen(uint8 *pu8N, uint16 u16NSize, uint8 *pu8d, uint16 
 		strRsa.u16Hsz = u16HashLength;
 		strRsa.u16Nsz = u16NSize;
 		
-		gstrCryptoCtxt.pu8Rsa = pu8RsaSignature;
-		ret = hif_send(M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_RSA_SIGN_GEN|M2M_REQ_DATA_PKT,(uint8*)&strRsa,sizeof(tstrRsaPayload),NULL,0,0);
+		internal->gstrCryptoCtxt.pu8Rsa = pu8RsaSignature;
+		ret = hif_send(dev, M2M_REQ_GROUP_CRYPTO,M2M_CRYPTO_REQ_RSA_SIGN_GEN|M2M_REQ_DATA_PKT,(uint8*)&strRsa,sizeof(tstrRsaPayload),NULL,0,0);
 		
 	}
 	return ret;			   

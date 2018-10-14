@@ -43,25 +43,24 @@
 #include "periph/gpio.h"
 #include "periph/spi.h"
 
+#include "winc1500.h"
+#include "winc1500_internal.h"
+#include "conf_winc.h"
+
 #include <stdio.h>
 #include "bsp/include/nm_bsp.h"
 #include "common/include/nm_common.h"
 #include "bus_wrapper/include/nm_bus_wrapper.h"
 
-#include "winc1500.h"
-#include "winc1500_internal.h"
-#include "conf_winc.h"
-
 #define NM_BUS_MAX_TRX_SZ	256
 
-tstrNmBusCapabilities egstrNmBusCapabilities =
+const tstrNmBusCapabilities egstrNmBusCapabilities =
 {
 	NM_BUS_MAX_TRX_SZ
 };
 
-static int8_t spi_rw(uint8_t* pu8Mosi, uint8_t* pu8Miso, uint16_t u16Sz)
+static int8_t spi_rw(winc1500_t *dev, uint8_t* pu8Mosi, uint8_t* pu8Miso, uint16_t u16Sz)
 {
-    winc1500_t *dev = &winc1500;
 	uint8_t u8Dummy = 0;
 	uint8_t u8SkipMosi = 0, u8SkipMiso = 0;
 
@@ -104,11 +103,10 @@ static int8_t spi_rw(uint8_t* pu8Mosi, uint8_t* pu8Miso, uint16_t u16Sz)
 *	@brief	Initialize the bus wrapper
 *	@return	M2M_SUCCESS in case of success and M2M_ERR_BUS_FAIL in case of failure
 */
-int8_t nm_bus_init(void *pvinit)
+int8_t nm_bus_init(winc1500_t *dev, void *pvinit)
 {
 	(void)pvinit;
 
-    winc1500_t *dev = &winc1500;
 	int8_t result = M2M_SUCCESS;
 
 	/* Configure SPI peripheral.
@@ -121,7 +119,7 @@ int8_t nm_bus_init(void *pvinit)
 	gpio_set(dev->params.cs_pin);
 
 	/* Reset WINC1500. */
-	nm_bsp_reset();
+	nm_bsp_reset(dev);
 	nm_bsp_sleep(1);
 	return result;
 }
@@ -136,14 +134,14 @@ int8_t nm_bus_init(void *pvinit)
 *	@return	M2M_SUCCESS in case of success and M2M_ERR_BUS_FAIL in case of failure
 *	@note	For SPI only, it's important to be able to send/receive at the same time
 */
-int8_t nm_bus_ioctl(uint8_t u8Cmd, void* pvParameter)
+int8_t nm_bus_ioctl(winc1500_t *dev, uint8_t u8Cmd, void* pvParameter)
 {
 	int8_t s8Ret = 0;
 	switch(u8Cmd)
 	{
 		case NM_BUS_IOCTL_RW: {
 			tstrNmSpiRw *pstrParam = (tstrNmSpiRw *)pvParameter;
-			s8Ret = spi_rw(pstrParam->pu8InBuf, pstrParam->pu8OutBuf, pstrParam->u16Sz);
+			s8Ret = spi_rw(dev, pstrParam->pu8InBuf, pstrParam->pu8OutBuf, pstrParam->u16Sz);
 		}
 		break;
 		default:
@@ -159,8 +157,10 @@ int8_t nm_bus_ioctl(uint8_t u8Cmd, void* pvParameter)
 *	@fn		nm_bus_deinit
 *	@brief	De-initialize the bus wrapper
 */
-int8_t nm_bus_deinit(void)
+int8_t nm_bus_deinit(winc1500_t *dev)
 {
+	(void) dev;
+
 	int8_t result = M2M_SUCCESS;
 	/* Code for Disabling SPI bus */
 	return result;
@@ -173,8 +173,9 @@ int8_t nm_bus_deinit(void)
 *					re-init configuration data
 *	@return		M2M_SUCCESS in case of success and M2M_ERR_BUS_FAIL in case of failure
 */
-int8_t nm_bus_reinit(void* config)
+int8_t nm_bus_reinit(winc1500_t *dev, void* config)
 {
+	(void)dev;
 	(void)config;
 	
 	return M2M_SUCCESS;

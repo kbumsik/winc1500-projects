@@ -852,7 +852,7 @@ typedef struct{
 	tstrSocketListenMsg
 	tstrSocketBindMsg 
 */
-typedef void (*tpfAppSocketCb) (SOCKET sock, uint8 u8Msg, void * pvMsg);
+typedef void (*tpfAppSocketCb) (winc1500_t *dev, SOCKET sock, uint8 u8Msg, void * pvMsg);
 
 
 /*!
@@ -870,7 +870,7 @@ typedef void (*tpfAppSocketCb) (SOCKET sock, uint8 u8Msg, void * pvMsg);
 @param [in]	u32ServerIP
 				Server IPv4 address encoded in NW byte order format. If it is Zero, then the DNS resolution failed.
 */
-typedef void (*tpfAppResolveCb) (uint8* pu8DomainName, uint32 u32ServerIP);
+typedef void (*tpfAppResolveCb) (winc1500_t *dev, uint8* pu8DomainName, uint32 u32ServerIP);
 
 /*!
 @typedef \
@@ -893,7 +893,7 @@ typedef void (*tpfAppResolveCb) (uint8* pu8DomainName, uint32 u32ServerIP);
 				- PING_ERR_DEST_UNREACH
 				- PING_ERR_TIMEOUT
 */
-typedef void (*tpfPingCb)(uint32 u32IPAddr, uint32 u32RTT, uint8 u8ErrorCode);
+typedef void (*tpfPingCb)(winc1500_t *dev, uint32 u32IPAddr, uint32 u32RTT, uint8 u8ErrorCode);
  
  /**@}*/ 
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -954,7 +954,7 @@ This example demonstrates the use of the socketinit for socket initialization fo
 
 \endcode
 */
-NMI_API void socketInit(void);
+NMI_API void socketInit(winc1500_t *dev);
 
 
 /*!
@@ -966,7 +966,7 @@ NMI_API void socketInit(void);
 	The function performs the necessary cleanup for the socket library static data
 	It must be invoked as the last any socket operation is performed on any active sockets.
 */
-NMI_API void socketDeinit(void);
+NMI_API void socketDeinit(winc1500_t *dev);
 
 
 /** @} */
@@ -1040,7 +1040,7 @@ NMI_API void socketDeinit(void);
 	m2m_wifi_connect((char *)MAIN_WLAN_SSID, sizeof(MAIN_WLAN_SSID), MAIN_WLAN_AUTH, (char *)MAIN_WLAN_PSK, M2M_WIFI_CH_ALL);
 	\endcode
 */
-NMI_API void registerSocketCallback(tpfAppSocketCb socket_cb, tpfAppResolveCb resolve_cb);
+NMI_API void registerSocketCallback(winc1500_t *dev, tpfAppSocketCb socket_cb, tpfAppResolveCb resolve_cb);
 
 
 /** @} */
@@ -1118,7 +1118,7 @@ static SOCKET ssl_socket = -1;
 ssl_socket = socket(AF_INET, SOCK_STREAM, SOCK_FLAGS_SSL));
 @endcode
 */
-NMI_API SOCKET socket(uint16 u16Domain, uint8 u8Type, uint8 u8Flags);
+NMI_API SOCKET socket(winc1500_t *dev, uint16 u16Domain, uint8 u8Type, uint8 u8Flags);
 
 
 /** @} */
@@ -1201,7 +1201,7 @@ NMI_API SOCKET socket(uint16 u16Domain, uint8 u8Type, uint8 u8Flags);
 	}
 @endcode	
 */
-NMI_API sint8 bind(SOCKET sock, struct sockaddr *pstrAddr, uint8 u8AddrLen);
+NMI_API sint8 bind(winc1500_t *dev, SOCKET sock, struct sockaddr *pstrAddr, uint8 u8AddrLen);
 
 
 /** @} */
@@ -1325,7 +1325,7 @@ This example demonstrates the call of the listen socket operation after a succes
 
 @endcode
 */
-NMI_API sint8 listen(SOCKET sock, uint8 backlog);
+NMI_API sint8 listen(winc1500_t *dev, SOCKET sock, uint8 backlog);
 /** @} */
 /** @defgroup AcceptFn accept
  *    @ingroup SocketAPI
@@ -1355,7 +1355,7 @@ NMI_API sint8 listen(SOCKET sock, uint8 backlog);
 	- [SOCK_ERR_INVALID_ARG](@ref SOCK_ERR_INVALID_ARG)
 		Indicating passing invalid arguments such as negative socket ID.
 */
-NMI_API sint8 accept(SOCKET sock, struct sockaddr *addr, uint8 *addrlen);
+NMI_API sint8 accept(winc1500_t *dev, SOCKET sock, struct sockaddr *addr, uint8 *addrlen);
 /** @} */
 /** @defgroup ConnectFn connect
  *    @ingroup SocketAPI
@@ -1459,7 +1459,7 @@ NMI_API sint8 accept(SOCKET sock, struct sockaddr *addr, uint8 *addrlen);
 	}
 @endcode
 */
-NMI_API sint8 connect(SOCKET sock, struct sockaddr *pstrAddr, uint8 u8AddrLen);
+NMI_API sint8 connect(winc1500_t *dev, SOCKET sock, struct sockaddr *pstrAddr, uint8 u8AddrLen);
 /** @} */
 /** @defgroup ReceiveFn recv
  *    @ingroup SocketAPI
@@ -1569,7 +1569,7 @@ NMI_API sint8 connect(SOCKET sock, struct sockaddr *pstrAddr, uint8 u8AddrLen);
 }
 @endcode
 */
-NMI_API sint16 recv(SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u32Timeoutmsec);
+NMI_API sint16 recv(winc1500_t *dev, SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u32Timeoutmsec);
 /** @} */
 /** @defgroup ReceiveFromSocketFn recvfrom
  *   @ingroup SocketAPI
@@ -1683,7 +1683,7 @@ NMI_API sint16 recv(SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u32Ti
 }
 @endcode
 */
-NMI_API sint16 recvfrom(SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u32Timeoutmsec);
+NMI_API sint16 recvfrom(winc1500_t *dev, SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u32Timeoutmsec);
 /** @} */
 /** @defgroup SendFn send
  *   @ingroup SocketAPI
@@ -1746,7 +1746,7 @@ NMI_API sint16 recvfrom(SOCKET sock, void *pvRecvBuf, uint16 u16BufLen, uint32 u
 @return		
 	The function shall return @ref SOCK_ERR_NO_ERROR for successful operation and a negative value (indicating the error) otherwise. 
 */
-NMI_API sint16 send(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 u16Flags);
+NMI_API sint16 send(winc1500_t *dev, SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 u16Flags);
 /** @} */
 /** @defgroup SendToSocketFn sendto
  *  @ingroup SocketAPI
@@ -1805,7 +1805,7 @@ NMI_API sint16 send(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint1
 @return
 	The function  returns @ref SOCK_ERR_NO_ERROR for successful operation and a negative value (indicating the error) otherwise. 
 */
-NMI_API sint16 sendto(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flags, struct sockaddr *pstrDestAddr, uint8 u8AddrLen);
+NMI_API sint16 sendto(winc1500_t *dev, SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flags, struct sockaddr *pstrDestAddr, uint8 u8AddrLen);
 /** @} */
 /** @defgroup CloseSocketFn close
  *  @ingroup SocketAPI
@@ -1834,7 +1834,7 @@ NMI_API sint16 sendto(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uin
 @return		
 	The function returned @ref SOCK_ERR_NO_ERROR for successful operation and a negative value (indicating the error) otherwise. 
 */
-NMI_API sint8 close(SOCKET sock);
+NMI_API sint8 close(winc1500_t *dev, SOCKET sock);
 
 
 /** @} */
@@ -1859,7 +1859,7 @@ NMI_API sint8 close(SOCKET sock);
 	(eg. "192.168.10.1" will be expressed as 0x010AA8C0).
 		
 */
-NMI_API uint32 nmi_inet_addr(char *pcIpAddr);
+NMI_API uint32 nmi_inet_addr(winc1500_t *dev, char *pcIpAddr);
 
 
 /** @} */
@@ -1888,7 +1888,7 @@ NMI_API uint32 nmi_inet_addr(char *pcIpAddr);
 	- [SOCK_ERR_NO_ERROR](@ref SOCK_ERR_NO_ERROR)
 	- [SOCK_ERR_INVALID_ARG](@ref SOCK_ERR_INVALID_ARG)
 */
-NMI_API sint8 gethostbyname(uint8 * pcHostName);
+NMI_API sint8 gethostbyname(winc1500_t *dev, uint8 * pcHostName);
 
 
 /** @} */
@@ -1909,7 +1909,7 @@ NMI_API sint8 sslEnableCertExpirationCheck(tenuSslCertExpSettings enuValidationS
 
 @sa		tenuSslCertExpSettings
 */
-NMI_API sint8 sslEnableCertExpirationCheck(tenuSslCertExpSettings enuValidationSetting);
+NMI_API sint8 sslEnableCertExpirationCheck(winc1500_t *dev, tenuSslCertExpSettings enuValidationSetting);
 
 
 /** @} */
@@ -1993,7 +1993,7 @@ NMI_API sint8 sslEnableCertExpirationCheck(tenuSslCertExpSettings enuValidationS
 	and a negative value (indicating the error) otherwise. 
 @sa SOL_SOCKET, SOL_SSL_SOCKET, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP
 */
-NMI_API sint8 setsockopt(SOCKET socket, uint8 u8Level, uint8 option_name,
+NMI_API sint8 setsockopt(winc1500_t *dev, SOCKET socket, uint8 u8Level, uint8 option_name,
        const void *option_value, uint16 u16OptionLen);
 
 
@@ -2023,7 +2023,7 @@ NMI_API sint8 setsockopt(SOCKET socket, uint8 u8Level, uint8 option_name,
 @return
 	The function shall return ZERO for successful operation and a negative value otherwise.
 */
-NMI_API sint8 getsockopt(SOCKET sock, uint8 u8Level, uint8 u8OptName, const void *pvOptValue, uint8* pu8OptLen);
+NMI_API sint8 getsockopt(winc1500_t *dev, SOCKET sock, uint8 u8Level, uint8 u8OptName, const void *pvOptValue, uint8* pu8OptLen);
 /** @} */
 
 /**@}*/
@@ -2050,7 +2050,7 @@ NMI_API sint8 getsockopt(SOCKET sock, uint8 u8Level, uint8 u8OptName, const void
 @see           nmi_inet_addr       
 @return        The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_ping_req(uint32 u32DstIP, uint8 u8TTL, tpfPingCb fpPingCb);
+NMI_API sint8 m2m_ping_req(winc1500_t *dev, uint32 u32DstIP, uint8 u8TTL, tpfPingCb fpPingCb);
 /**@}*/
 
 

@@ -55,8 +55,6 @@ MACROS
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 DATA TYPES
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
-static tpfOtaUpdateCb gpfOtaUpdateCb = NULL;
-static tpfOtaNotifCb  gpfOtaNotifCb = NULL;
 
 
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -77,8 +75,9 @@ FUNCTION PROTOTYPES
 *	@date
 *	@version	1.0
 */
-static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
+static void m2m_ota_cb(winc1500_t *dev, uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	(void)u16DataSize;
 
 	sint8 ret = M2M_SUCCESS;
@@ -86,22 +85,22 @@ static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 	{
 		tstrOtaUpdateInfo strOtaUpdateInfo;
 		m2m_memset((uint8*)&strOtaUpdateInfo,0,sizeof(tstrOtaUpdateInfo));
-		ret = hif_receive(u32Addr,(uint8*)&strOtaUpdateInfo,sizeof(tstrOtaUpdateInfo),0);
+		ret = hif_receive(dev, u32Addr,(uint8*)&strOtaUpdateInfo,sizeof(tstrOtaUpdateInfo),0);
 		if(ret == M2M_SUCCESS)
 		{
-			if(gpfOtaNotifCb)
-				gpfOtaNotifCb(&strOtaUpdateInfo);
+			if(internal->gpfOtaNotifCb)
+				internal->gpfOtaNotifCb(dev, &strOtaUpdateInfo);
 		}
 	}
 	else if (u8OpCode == M2M_OTA_RESP_UPDATE_STATUS)
 	{
 		tstrOtaUpdateStatusResp strOtaUpdateStatusResp;
 		m2m_memset((uint8*)&strOtaUpdateStatusResp,0,sizeof(tstrOtaUpdateStatusResp));
-		ret = hif_receive(u32Addr, (uint8*) &strOtaUpdateStatusResp,sizeof(tstrOtaUpdateStatusResp), 0);
+		ret = hif_receive(dev, u32Addr, (uint8*) &strOtaUpdateStatusResp,sizeof(tstrOtaUpdateStatusResp), 0);
 		if(ret == M2M_SUCCESS)
 		{
-			if(gpfOtaUpdateCb)
-				gpfOtaUpdateCb(strOtaUpdateStatusResp.u8OtaUpdateStatusType,strOtaUpdateStatusResp.u8OtaUpdateStatus);
+			if(internal->gpfOtaUpdateCb)
+				internal->gpfOtaUpdateCb(dev, strOtaUpdateStatusResp.u8OtaUpdateStatusType,strOtaUpdateStatusResp.u8OtaUpdateStatus);
 		}
 	}
 	else
@@ -126,22 +125,23 @@ static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8  m2m_ota_init(tpfOtaUpdateCb pfOtaUpdateCb, tpfOtaNotifCb pfOtaNotifCb)
+NMI_API sint8  m2m_ota_init(winc1500_t *dev, tpfOtaUpdateCb pfOtaUpdateCb, tpfOtaNotifCb pfOtaNotifCb)
 {
+	winc1500_internal_t *internal = &dev->internal;
 	sint8 ret = M2M_SUCCESS;
 
 	if(pfOtaUpdateCb){
-		gpfOtaUpdateCb = pfOtaUpdateCb;
+		internal->gpfOtaUpdateCb = pfOtaUpdateCb;
 	}else{
 		M2M_ERR("Invaild Ota update cb\n");
 	}
 	if(pfOtaNotifCb){
-		gpfOtaNotifCb = pfOtaNotifCb;
+		internal->gpfOtaNotifCb = pfOtaNotifCb;
 	}else{
 		M2M_ERR("Invaild Ota notify cb\n");
 	}
 
-	hif_register_cb(M2M_REQ_GROUP_OTA,m2m_ota_cb);
+	hif_register_cb(dev, M2M_REQ_GROUP_OTA,m2m_ota_cb);
 
 	return ret;
 }
@@ -158,14 +158,14 @@ NMI_API sint8  m2m_ota_init(tpfOtaUpdateCb pfOtaUpdateCb, tpfOtaNotifCb pfOtaNot
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8  m2m_ota_notif_set_url(uint8 * u8Url)
+NMI_API sint8  m2m_ota_notif_set_url(winc1500_t *dev, uint8 * u8Url)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint16 u16UrlSize = m2m_strlen(u8Url) + 1;
 	/*Todo: we may change it to data pkt but we need to give it higer priority
 			but the priorty is not implemnted yet in data pkt
 	*/
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_SET_URL,u8Url,u16UrlSize,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_SET_URL,u8Url,u16UrlSize,NULL,0,0);
 	return ret;
 
 }
@@ -180,10 +180,10 @@ NMI_API sint8  m2m_ota_notif_set_url(uint8 * u8Url)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8  m2m_ota_notif_check_for_update(void)
+NMI_API sint8  m2m_ota_notif_check_for_update(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_CHECK_FOR_UPDATE,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_CHECK_FOR_UPDATE,NULL,0,NULL,0,0);
 	return ret;
 }
 
@@ -200,12 +200,12 @@ NMI_API sint8  m2m_ota_notif_check_for_update(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_notif_sched(uint32 u32Period)
+NMI_API sint8 m2m_ota_notif_sched(winc1500_t *dev, uint32 u32Period)
 {
 	(void)u32Period;
-	
+
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_CHECK_FOR_UPDATE,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_NOTIF_CHECK_FOR_UPDATE,NULL,0,NULL,0,0);
 	return ret;
 }
 
@@ -223,14 +223,14 @@ NMI_API sint8 m2m_ota_notif_sched(uint32 u32Period)
 	The function SHALL return 0 for success and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_ota_start_update(uint8 * u8DownloadUrl)
+NMI_API sint8 m2m_ota_start_update(winc1500_t *dev, uint8 * u8DownloadUrl)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint16 u16DurlSize = m2m_strlen(u8DownloadUrl) + 1;
 	/*Todo: we may change it to data pkt but we need to give it higer priority
 			but the priorty is not implemnted yet in data pkt
 	*/
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_START_FW_UPDATE,u8DownloadUrl,u16DurlSize,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_START_FW_UPDATE,u8DownloadUrl,u16DurlSize,NULL,0,0);
 	return ret;
 }
 /*!
@@ -247,11 +247,11 @@ NMI_API sint8 m2m_ota_start_update(uint8 * u8DownloadUrl)
 	The function SHALL return 0 for success and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_ota_start_update_crt(uint8 * u8DownloadUrl)
+NMI_API sint8 m2m_ota_start_update_crt(winc1500_t *dev, uint8 * u8DownloadUrl)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint16 u16DurlSize = m2m_strlen(u8DownloadUrl) + 1;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_START_CRT_UPDATE,u8DownloadUrl,u16DurlSize,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_START_CRT_UPDATE,u8DownloadUrl,u16DurlSize,NULL,0,0);
 	return ret;
 }
 
@@ -266,10 +266,10 @@ NMI_API sint8 m2m_ota_start_update_crt(uint8 * u8DownloadUrl)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_rollback(void)
+NMI_API sint8 m2m_ota_rollback(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ROLLBACK_FW,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ROLLBACK_FW,NULL,0,NULL,0,0);
 	return ret;
 }
 /*!
@@ -282,10 +282,10 @@ NMI_API sint8 m2m_ota_rollback(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_rollback_crt(void)
+NMI_API sint8 m2m_ota_rollback_crt(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ROLLBACK_CRT,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ROLLBACK_CRT,NULL,0,NULL,0,0);
 	return ret;
 }
 
@@ -299,10 +299,10 @@ NMI_API sint8 m2m_ota_rollback_crt(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_abort(void)
+NMI_API sint8 m2m_ota_abort(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ABORT,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_ABORT,NULL,0,NULL,0,0);
 	return ret;
 }
 
@@ -317,10 +317,10 @@ NMI_API sint8 m2m_ota_abort(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_switch_firmware(void)
+NMI_API sint8 m2m_ota_switch_firmware(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_SWITCH_FIRMWARE,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_SWITCH_FIRMWARE,NULL,0,NULL,0,0);
 	return ret;
 }
 /*!
@@ -333,10 +333,10 @@ NMI_API sint8 m2m_ota_switch_firmware(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_switch_crt(void)
+NMI_API sint8 m2m_ota_switch_crt(winc1500_t *dev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_send(M2M_REQ_GROUP_OTA,M2M_OTA_REQ_SWITCH_CRT_IMG,NULL,0,NULL,0,0);
+	ret = hif_send(dev, M2M_REQ_GROUP_OTA,M2M_OTA_REQ_SWITCH_CRT_IMG,NULL,0,NULL,0,0);
 	return ret;
 }
 
@@ -350,14 +350,14 @@ NMI_API sint8 m2m_ota_switch_crt(void)
 @return
 	The function SHALL return 0 for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_ota_get_firmware_version(tstrM2mRev * pstrRev)
+NMI_API sint8 m2m_ota_get_firmware_version(winc1500_t *dev, tstrM2mRev * pstrRev)
 {
 	sint8 ret = M2M_SUCCESS;
-	ret = hif_chip_wake();
+	ret = hif_chip_wake(dev);
 	if(ret == M2M_SUCCESS)
 	{
-    	ret = nm_get_ota_firmware_info(pstrRev);
-		hif_chip_sleep();
+    	ret = nm_get_ota_firmware_info(dev, pstrRev);
+		hif_chip_sleep(dev);
 	}
 	return ret;
 }

@@ -393,7 +393,7 @@ typedef enum{
 	tstrM2mScanDone
 	tstrM2mWifiscanResult
 */
-typedef void (*tpfAppWifiCb) (uint8 u8MsgType, void * pvMsg);
+typedef void (*tpfAppWifiCb) (winc1500_t *dev, uint8 u8MsgType, void * pvMsg);
 
 /*!
 @typedef \
@@ -424,7 +424,7 @@ typedef void (*tpfAppWifiCb) (uint8 u8MsgType, void * pvMsg);
 	m2m_wifi_init
 
 */
-typedef void (*tpfAppEthCb) (uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf);
+typedef void (*tpfAppEthCb) (winc1500_t *dev, uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf);
 
 /*!
 @typedef	\
@@ -453,7 +453,7 @@ typedef void (*tpfAppEthCb) (uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf);
 	u16PayloadSize should not exceed the buffer size given through m2m_wifi_enable_monitoring_mode.
 	
 */
-typedef void (*tpfAppMonCb) (tstrM2MWifiRxPacketInfo *pstrWifiRxPacket, uint8 * pu8Payload, uint16 u16PayloadSize);
+typedef void (*tpfAppMonCb) (winc1500_t *dev, tstrM2MWifiRxPacketInfo *pstrWifiRxPacket, uint8 * pu8Payload, uint16 u16PayloadSize);
 
 /**
 @struct 	\
@@ -594,7 +594,7 @@ FUNCTION PROTOTYPES
 @return		
 	The function returns @ref M2M_SUCCESS for successful operations  and a negative value otherwise.
 */
-NMI_API sint8  m2m_wifi_download_mode(void);
+NMI_API sint8  m2m_wifi_download_mode(winc1500_t *dev);
 
  /**@}*/
  /** @defgroup WifiInitFn m2m_wifi_init
@@ -653,7 +653,7 @@ Following are the possible Wi-Fi events that are expected to be received through
 @return		
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8  m2m_wifi_init(tstrWifiInitParam * pWifiInitParam);
+NMI_API sint8  m2m_wifi_init(winc1500_t *dev, tstrWifiInitParam * pWifiInitParam);
  /**@}*/
  /** @defgroup WifiDeinitFn m2m_wifi_deinit
  *  @ingroup WLANAPI
@@ -677,7 +677,7 @@ NMI_API sint8  m2m_wifi_init(tstrWifiInitParam * pWifiInitParam);
 @return		
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8  m2m_wifi_deinit(void * arg);
+NMI_API sint8  m2m_wifi_deinit(winc1500_t *dev, void * arg);
 
  /**@}*/
 /** @defgroup WifiHandleEventsFn m2m_wifi_handle_events
@@ -707,7 +707,7 @@ NMI_API sint8  m2m_wifi_deinit(void * arg);
 	The function returns @ref M2M_SUCCESS for successful interrupt handling and a negative value otherwise.
 */
 
-NMI_API sint8 m2m_wifi_handle_events(void * arg);
+NMI_API sint8 m2m_wifi_handle_events(winc1500_t *dev, void * arg);
 
  /**@}*/
 /** @defgroup WifiSendCRLFn m2m_wifi_send_crl
@@ -731,7 +731,7 @@ NMI_API sint8 m2m_wifi_handle_events(void * arg);
 	and a negative value otherwise.
 */
 
-sint8 m2m_wifi_send_crl(tstrTlsCrlInfo* pCRL);
+sint8 m2m_wifi_send_crl(winc1500_t *dev, tstrTlsCrlInfo* pCRL);
 
  /**@}*/
 /** @defgroup WifiDefaultConnectFn m2m_wifi_default_connect
@@ -766,7 +766,7 @@ sint8 m2m_wifi_send_crl(tstrTlsCrlInfo* pCRL);
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_default_connect(void);
+NMI_API sint8 m2m_wifi_default_connect(winc1500_t *dev);
  /**@}*/
 /** @defgroup WifiConnectFn m2m_wifi_connect
  *   @ingroup WLANAPI
@@ -824,7 +824,7 @@ NMI_API sint8 m2m_wifi_default_connect(void);
 @return	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 	
 */
-NMI_API sint8 m2m_wifi_connect(char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, void *pvAuthInfo, uint16 u16Ch);
+NMI_API sint8 m2m_wifi_connect(winc1500_t *dev, char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, void *pvAuthInfo, uint16 u16Ch);
  /**@}*/
 /** @defgroup WifiConnectFn m2m_wifi_connect_sc
  *   @ingroup WLANAPI
@@ -886,7 +886,7 @@ NMI_API sint8 m2m_wifi_connect(char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, v
 @return	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 	
 */
- NMI_API sint8 m2m_wifi_connect_sc(char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, void *pvAuthInfo, uint16 u16Ch, uint8 u8SaveCred);
+ NMI_API sint8 m2m_wifi_connect_sc(winc1500_t *dev, char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, void *pvAuthInfo, uint16 u16Ch, uint8 u8SaveCred);
  /**@}*/
 /** @defgroup WifiDisconnectFn m2m_wifi_disconnect
  *   @ingroup WLANAPI
@@ -913,7 +913,7 @@ NMI_API sint8 m2m_wifi_connect(char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, v
 @return		
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_disconnect(void);
+NMI_API sint8 m2m_wifi_disconnect(winc1500_t *dev);
  
  /**@}*/
 /** @defgroup StartProvisionModeFn m2m_wifi_start_provision_mode
@@ -1034,7 +1034,7 @@ NMI_API sint8 m2m_wifi_disconnect(void);
 	
 @endcode
 */
-NMI_API sint8 m2m_wifi_start_provision_mode(tstrM2MAPConfig *pstrAPConfig, char *pcHttpServerDomainName, uint8 bEnableHttpRedirect);
+NMI_API sint8 m2m_wifi_start_provision_mode(winc1500_t *dev, tstrM2MAPConfig *pstrAPConfig, char *pcHttpServerDomainName, uint8 bEnableHttpRedirect);
  /**@}*/
 /** @defgroup StopProvisioningModeFn m2m_wifi_stop_provision_mode
  *   @ingroup WLANAPI
@@ -1053,7 +1053,7 @@ NMI_API sint8 m2m_wifi_start_provision_mode(tstrM2MAPConfig *pstrAPConfig, char 
 @return
 	The function returns ZERO for success and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_stop_provision_mode(void);
+NMI_API sint8 m2m_wifi_stop_provision_mode(winc1500_t *dev);
  /**@}*/
 /** @defgroup GetConnectionInfoFn m2m_wifi_get_connection_info
  *   @ingroup WLANAPI
@@ -1144,7 +1144,7 @@ NMI_API sint8 m2m_wifi_stop_provision_mode(void);
 	
 @endcode
 */
-NMI_API sint8 m2m_wifi_get_connection_info(void);
+NMI_API sint8 m2m_wifi_get_connection_info(winc1500_t *dev);
  /**@}*/
 /** @defgroup WifiSetMacAddFn m2m_wifi_set_mac_address
  *   @ingroup WLANAPI
@@ -1165,7 +1165,7 @@ NMI_API sint8 m2m_wifi_get_connection_info(void);
 @return		
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_set_mac_address(uint8 au8MacAddress[6]);
+NMI_API sint8 m2m_wifi_set_mac_address(winc1500_t *dev, uint8 au8MacAddress[6]);
  
  /**@}*/
 /** @defgroup WifiWpsFn m2m_wifi_wps
@@ -1262,7 +1262,7 @@ NMI_API sint8 m2m_wifi_set_mac_address(uint8 au8MacAddress[6]);
 	
 @endcode
 */
-NMI_API sint8 m2m_wifi_wps(uint8 u8TriggerType,const char  *pcPinNumber);
+NMI_API sint8 m2m_wifi_wps(winc1500_t *dev, uint8 u8TriggerType,const char  *pcPinNumber);
  /**@}*/
 /** @defgroup WifiWpsDisableFn m2m_wifi_wps_disable
  *   @ingroup WLANAPI
@@ -1283,7 +1283,7 @@ NMI_API sint8 m2m_wifi_wps(uint8 u8TriggerType,const char  *pcPinNumber);
 @return
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_wps_disable(void);
+NMI_API sint8 m2m_wifi_wps_disable(winc1500_t *dev);
  
  /**@}*/
 /** @defgroup WifiP2PFn m2m_wifi_p2p
@@ -1374,7 +1374,7 @@ NMI_API sint8 m2m_wifi_wps_disable(void);
 @endcode
 
 */
-NMI_API sint8 m2m_wifi_p2p(uint8 u8Channel);
+NMI_API sint8 m2m_wifi_p2p(winc1500_t *dev, uint8 u8Channel);
  /**@}*/
 /** @defgroup WifiP2PDisconnectFn m2m_wifi_p2p_disconnect
  *   @ingroup WLANAPI
@@ -1392,7 +1392,7 @@ NMI_API sint8 m2m_wifi_p2p(uint8 u8Channel);
 @return
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_p2p_disconnect(void);
+NMI_API sint8 m2m_wifi_p2p_disconnect(winc1500_t *dev);
  /**@}*/
 /** @defgroup WifiEnableApFn m2m_wifi_enable_ap
  *   @ingroup WLANAPI
@@ -1485,7 +1485,7 @@ NMI_API sint8 m2m_wifi_p2p_disconnect(void);
 @endcode
 
 */
-NMI_API sint8 m2m_wifi_enable_ap(WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig);
+NMI_API sint8 m2m_wifi_enable_ap(winc1500_t *dev, WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig);
  /**@}*/
 /** @defgroup WifiDisableApFn m2m_wifi_disable_ap
  *   @ingroup WLANAPI
@@ -1501,7 +1501,7 @@ NMI_API sint8 m2m_wifi_enable_ap(WINC1500_CONST tstrM2MAPConfig* pstrM2MAPConfig
 @return
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_disable_ap(void);
+NMI_API sint8 m2m_wifi_disable_ap(winc1500_t *dev);
  /**@}*/
 /** @defgroup SetStaticIPFn m2m_wifi_set_static_ip
  *   @ingroup WLANAPI
@@ -1533,7 +1533,7 @@ NMI_API sint8 m2m_wifi_disable_ap(void);
 @return
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_set_static_ip(tstrM2MIPConfig * pstrStaticIPConf);
+NMI_API sint8 m2m_wifi_set_static_ip(winc1500_t *dev, tstrM2MIPConfig * pstrStaticIPConf);
  
  /**@}*/
 /** @defgroup RequestDHCPClientFn m2m_wifi_request_dhcp_client
@@ -1552,7 +1552,7 @@ NMI_API sint8 m2m_wifi_set_static_ip(tstrM2MIPConfig * pstrStaticIPConf);
 @return
 	The function returns @ref M2M_SUCCESS always.
 */
-NMI_API sint8 m2m_wifi_request_dhcp_client(void);
+NMI_API sint8 m2m_wifi_request_dhcp_client(winc1500_t *dev);
  /**@}*/
 /** @defgroup RequestDHCPServerFn m2m_wifi_request_dhcp_server
  *   @ingroup WLANAPI
@@ -1570,7 +1570,7 @@ NMI_API sint8 m2m_wifi_request_dhcp_client(void);
 @return
 	The function returns @ref M2M_SUCCESS always.
 */
-NMI_API sint8 m2m_wifi_request_dhcp_server(uint8* addr);
+NMI_API sint8 m2m_wifi_request_dhcp_server(winc1500_t *dev, uint8* addr);
  /**@}*/
 /** @defgroup WifiDHCPEnableFn m2m_wifi_enable_dhcp
  *   @ingroup WLANAPI
@@ -1599,7 +1599,7 @@ NMI_API sint8 m2m_wifi_request_dhcp_server(uint8* addr);
 @return
 	The function SHALL return @ref M2M_SUCCESS  for successful operation and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_enable_dhcp(uint8  u8DhcpEn );
+NMI_API sint8 m2m_wifi_enable_dhcp(winc1500_t *dev, uint8  u8DhcpEn );
  /**@}*/
 /** @defgroup WifiSetScanOptionFn m2m_wifi_set_scan_options
  *   @ingroup WLANAPI
@@ -1621,7 +1621,7 @@ NMI_API sint8 m2m_wifi_enable_dhcp(uint8  u8DhcpEn );
 @return
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_set_scan_options(tstrM2MScanOption* ptstrM2MScanOption);
+NMI_API sint8 m2m_wifi_set_scan_options(winc1500_t *dev, tstrM2MScanOption* ptstrM2MScanOption);
  /**@}*/
 /** @defgroup WifiSetScanRegionFn m2m_wifi_set_scan_region
  *   @ingroup WLANAPI
@@ -1644,7 +1644,7 @@ NMI_API sint8 m2m_wifi_set_scan_options(tstrM2MScanOption* ptstrM2MScanOption);
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_set_scan_region(uint16  ScanRegion);
+NMI_API sint8 m2m_wifi_set_scan_region(winc1500_t *dev, uint16  ScanRegion);
  /**@}*/
 /** @defgroup WifiRequestScanFn m2m_wifi_request_scan
 *   @ingroup WLANAPI
@@ -1770,7 +1770,7 @@ NMI_API sint8 m2m_wifi_set_scan_region(uint16  ScanRegion);
 	
 @endcode
 */
-NMI_API sint8 m2m_wifi_request_scan(uint8 ch);
+NMI_API sint8 m2m_wifi_request_scan(winc1500_t *dev, uint8 ch);
 
   /**@}*/
 /** @defgroup WifiRequestScanFn m2m_wifi_request_scan_passive
@@ -1815,7 +1815,7 @@ NMI_API sint8 m2m_wifi_request_scan(uint8 ch);
 	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_request_scan_passive(uint8 ch, uint16 scan_time);
+NMI_API sint8 m2m_wifi_request_scan_passive(winc1500_t *dev, uint8 ch, uint16 scan_time);
 
   
  /**@}*/
@@ -1976,7 +1976,7 @@ NMI_API sint8 m2m_wifi_request_scan_passive(uint8 ch, uint16 scan_time);
 	
 @endcode
 */
-NMI_API sint8 m2m_wifi_request_scan_ssid_list(uint8 ch,uint8 * u8Ssidlist);
+NMI_API sint8 m2m_wifi_request_scan_ssid_list(winc1500_t *dev, uint8 ch,uint8 * u8Ssidlist);
 
 /**@}*/
 /** @defgroup WifiGetNumAPFoundFn m2m_wifi_get_num_ap_found
@@ -2085,7 +2085,7 @@ NMI_API sint8 m2m_wifi_request_scan_ssid_list(uint8 ch,uint8 * u8Ssidlist);
 	
 @endcode			 
 */
-NMI_API uint8 m2m_wifi_get_num_ap_found(void);
+NMI_API uint8 m2m_wifi_get_num_ap_found(winc1500_t *dev);
 /**@}*/
 /** @defgroup WifiReqScanResult m2m_wifi_req_scan_result
 *   @ingroup WLANAPI
@@ -2199,7 +2199,7 @@ NMI_API uint8 m2m_wifi_get_num_ap_found(void);
 	
 @endcode 
 */
-NMI_API sint8 m2m_wifi_req_scan_result(uint8 index);
+NMI_API sint8 m2m_wifi_req_scan_result(winc1500_t *dev, uint8 index);
 /**@}*/
 /** @defgroup WifiReqCurrentRssiFn m2m_wifi_req_curr_rssi
  *   @ingroup WLANAPI
@@ -2257,7 +2257,7 @@ NMI_API sint8 m2m_wifi_req_scan_result(uint8 index);
 @endcode	
 
 */
-NMI_API sint8 m2m_wifi_req_curr_rssi(void);
+NMI_API sint8 m2m_wifi_req_curr_rssi(winc1500_t *dev);
 /**@}*/
 /** @defgroup WifiGetOtpMacAddFn m2m_wifi_get_otp_mac_address
 *   @ingroup WLANAPI
@@ -2279,7 +2279,7 @@ NMI_API sint8 m2m_wifi_req_curr_rssi(void);
 @return      The function returns @ref M2M_SUCCESS for success and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_get_otp_mac_address(uint8 *pu8MacAddr, uint8 * pu8IsValid);
+NMI_API sint8 m2m_wifi_get_otp_mac_address(winc1500_t *dev, uint8 *pu8MacAddr, uint8 * pu8IsValid);
 /**@}*/
 /** @defgroup WifiGetMacAddFn m2m_wifi_get_mac_address
 *   @ingroup WLANAPI
@@ -2295,7 +2295,7 @@ NMI_API sint8 m2m_wifi_get_otp_mac_address(uint8 *pu8MacAddr, uint8 * pu8IsValid
 @return      The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_get_mac_address(uint8 *pu8MacAddr);
+NMI_API sint8 m2m_wifi_get_mac_address(winc1500_t *dev, uint8 *pu8MacAddr);
 /**@}*/
 /** @defgroup SetSleepModeFn m2m_wifi_set_sleep_mode
  *   @ingroup WLANAPI
@@ -2324,7 +2324,7 @@ NMI_API sint8 m2m_wifi_get_mac_address(uint8 *pu8MacAddr);
 
 @return    The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_set_sleep_mode(uint8 PsTyp, uint8 BcastEn);
+NMI_API sint8 m2m_wifi_set_sleep_mode(winc1500_t *dev, uint8 PsTyp, uint8 BcastEn);
 /**@}*/
 /** @defgroup WifiRequestSleepFn m2m_wifi_request_sleep
  *   @ingroup WLANAPI
@@ -2349,7 +2349,7 @@ NMI_API sint8 m2m_wifi_set_sleep_mode(uint8 PsTyp, uint8 BcastEn);
 
 @return    	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_request_sleep(uint32 u32SlpReqTime);
+NMI_API sint8 m2m_wifi_request_sleep(winc1500_t *dev, uint32 u32SlpReqTime);
 /**@}*/
 /** @defgroup GetSleepModeFn m2m_wifi_get_sleep_mode
  *   @ingroup WLANAPI
@@ -2362,7 +2362,7 @@ NMI_API sint8 m2m_wifi_request_sleep(uint32 u32SlpReqTime);
 		    m2m_wifi_set_sleep_mode
 @return	    The current operating power saving mode based on the enumerated sleep modes @ref tenuPowerSaveModes.
 */
-NMI_API uint8 m2m_wifi_get_sleep_mode(void);
+NMI_API uint8 m2m_wifi_get_sleep_mode(winc1500_t *dev);
 /**@}*/
 /** @defgroup WifiReqClientCtrlFn m2m_wifi_req_client_ctrl
  *   @ingroup WLANAPI
@@ -2381,7 +2381,7 @@ NMI_API uint8 m2m_wifi_get_sleep_mode(void);
 			M2M_WIFI_RESP_CLIENT_INFO
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_req_client_ctrl(uint8 cmd);
+NMI_API sint8 m2m_wifi_req_client_ctrl(winc1500_t *dev, uint8 cmd);
 /**@}*/
 /** @defgroup WifiReqServerInit m2m_wifi_req_server_init
  *   @ingroup WLANAPI
@@ -2399,7 +2399,7 @@ NMI_API sint8 m2m_wifi_req_client_ctrl(uint8 cmd);
 @warning	       This mode is not supported in the current release.
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_req_server_init(uint8 ch);
+NMI_API sint8 m2m_wifi_req_server_init(winc1500_t *dev, uint8 ch);
 /**@}*/
 /** @defgroup WifiSetDeviceNameFn m2m_wifi_set_device_name
  *   @ingroup WLANAPI
@@ -2420,7 +2420,7 @@ NMI_API sint8 m2m_wifi_req_server_init(uint8 ch);
 @warning    Device name shall contain only characters allowed in valid internet host name as defined in RFC 952 and 1123.
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-NMI_API sint8 m2m_wifi_set_device_name(uint8 *pu8DeviceName, uint8 u8DeviceNameLength);
+NMI_API sint8 m2m_wifi_set_device_name(winc1500_t *dev, uint8 *pu8DeviceName, uint8 u8DeviceNameLength);
 /**@}*/
 /** @defgroup WifiSetLsnIntFn m2m_wifi_set_lsn_int
  *   @ingroup WLANAPI
@@ -2442,7 +2442,7 @@ NMI_API sint8 m2m_wifi_set_device_name(uint8 *pu8DeviceName, uint8 u8DeviceNameL
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
 */
-NMI_API sint8 m2m_wifi_set_lsn_int(tstrM2mLsnInt *pstrM2mLsnInt);
+NMI_API sint8 m2m_wifi_set_lsn_int(winc1500_t *dev, tstrM2mLsnInt *pstrM2mLsnInt);
 /**@}*/
 /** @defgroup WifiEnableMonitorModeFn m2m_wifi_enable_monitoring_mode
  *   @ingroup WLANAPI
@@ -2536,7 +2536,7 @@ NMI_API sint8 m2m_wifi_set_lsn_int(tstrM2mLsnInt *pstrM2mLsnInt);
 			}
  * @endcode
  */
-NMI_API sint8 m2m_wifi_enable_monitoring_mode(tstrM2MWifiMonitorModeCtrl *pstrMtrCtrl, uint8 *pu8PayloadBuffer, 
+NMI_API sint8 m2m_wifi_enable_monitoring_mode(winc1500_t *dev, tstrM2MWifiMonitorModeCtrl *pstrMtrCtrl, uint8 *pu8PayloadBuffer,
 										   uint16 u16BufferSize, uint16 u16DataOffset);
 /**@}*/
 /** @defgroup WifiDisableMonitorModeFn m2m_wifi_disable_monitoring_mode
@@ -2550,7 +2550,7 @@ NMI_API sint8 m2m_wifi_enable_monitoring_mode(tstrM2MWifiMonitorModeCtrl *pstrMt
  * @see           m2m_wifi_enable_monitoring_mode               
  * @return      The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_disable_monitoring_mode(void);
+NMI_API sint8 m2m_wifi_disable_monitoring_mode(winc1500_t *dev);
  /**@}*/
  /** @defgroup SendWlanPktFn m2m_wifi_send_wlan_pkt
  *   @ingroup WLANAPI
@@ -2573,7 +2573,7 @@ NMI_API sint8 m2m_wifi_disable_monitoring_mode(void);
  * @note             Packets are user's responsibility.
  * @return     	    The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_send_wlan_pkt(uint8 *pu8WlanPacket, uint16 u16WlanHeaderLength, uint16 u16WlanPktSize);
+NMI_API sint8 m2m_wifi_send_wlan_pkt(winc1500_t *dev, uint8 *pu8WlanPacket, uint16 u16WlanHeaderLength, uint16 u16WlanPktSize);
 /**@}*/
 /** @defgroup WifiSendEthernetPktFn m2m_wifi_send_ethernet_pkt
  *   @ingroup WLANAPI
@@ -2593,7 +2593,7 @@ NMI_API sint8 m2m_wifi_send_wlan_pkt(uint8 *pu8WlanPacket, uint16 u16WlanHeaderL
  * @return         The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 
  */
-NMI_API sint8 m2m_wifi_send_ethernet_pkt(uint8* pu8Packet,uint16 u16PacketSize);
+NMI_API sint8 m2m_wifi_send_ethernet_pkt(winc1500_t *dev, uint8* pu8Packet,uint16 u16PacketSize);
 /**@}*/
 /** @defgroup WifiEnableSntpFn m2m_wifi_enable_sntp
  *   @ingroup WLANAPI
@@ -2616,7 +2616,7 @@ NMI_API sint8 m2m_wifi_send_ethernet_pkt(uint8* pu8Packet,uint16 u16PacketSize);
  * @see             m2m_wifi_set_sytem_time       
  * @return        The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_enable_sntp(uint8 bEnable);
+NMI_API sint8 m2m_wifi_enable_sntp(winc1500_t *dev, uint8 bEnable);
 /**@}*/
 /** @defgroup WifiSetSystemTime m2m_wifi_set_sytem_time
  *   @ingroup WLANAPI
@@ -2634,7 +2634,7 @@ NMI_API sint8 m2m_wifi_enable_sntp(uint8 bEnable);
  *		         using the API @ref m2m_wifi_set_sytem_time.
  * @return        The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_set_sytem_time(uint32 u32UTCSeconds);
+NMI_API sint8 m2m_wifi_set_sytem_time(winc1500_t *dev, uint32 u32UTCSeconds);
 /**@}*/
 /** @defgroup WifiGetSystemTime m2m_wifi_get_sytem_time
  *   @ingroup WLANAPI
@@ -2650,7 +2650,7 @@ NMI_API sint8 m2m_wifi_set_sytem_time(uint32 u32UTCSeconds);
  *		        using the API @ref m2m_wifi_get_sytem_time.
  * @return        The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_get_sytem_time(void);
+NMI_API sint8 m2m_wifi_get_sytem_time(winc1500_t *dev);
 /**@}*/
 /** @defgroup WifiSetCustInfoElementFn m2m_wifi_set_cust_InfoElement
  *   @ingroup WLANAPI
@@ -2710,7 +2710,7 @@ NMI_API sint8 m2m_wifi_get_sytem_time(void);
             m2m_wifi_set_cust_InfoElement(elementData);	
  * @endcode
  */
-NMI_API sint8 m2m_wifi_set_cust_InfoElement(uint8* pau8M2mCustInfoElement);
+NMI_API sint8 m2m_wifi_set_cust_InfoElement(winc1500_t *dev, uint8* pau8M2mCustInfoElement);
  /**@}*/
 /** @defgroup WifiSetPowerProfile m2m_wifi_set_power_profile
  *   @ingroup WLANAPI
@@ -2728,7 +2728,7 @@ NMI_API sint8 m2m_wifi_set_cust_InfoElement(uint8* pau8M2mCustInfoElement);
 			m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.    
 */
-sint8 m2m_wifi_set_power_profile(uint8 u8PwrMode);
+sint8 m2m_wifi_set_power_profile(winc1500_t *dev, uint8 u8PwrMode);
   /**@}*/
   /** @defgroup WifiSetTxPower m2m_wifi_set_tx_power
  *   @ingroup WLANAPI
@@ -2744,7 +2744,7 @@ sint8 m2m_wifi_set_power_profile(uint8 u8PwrMode);
 			m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.    
 */
-sint8 m2m_wifi_set_tx_power(uint8 u8TxPwrLevel);
+sint8 m2m_wifi_set_tx_power(winc1500_t *dev, uint8 u8TxPwrLevel);
  /**@}*/
 /** @defgroup WifiEnableFirmware m2m_wifi_enable_firmware_logs
 *   @ingroup WLANAPI
@@ -2761,7 +2761,7 @@ sint8 m2m_wifi_set_tx_power(uint8 u8TxPwrLevel);
 			m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.     
 */
-sint8 m2m_wifi_enable_firmware_logs(uint8 u8Enable);
+sint8 m2m_wifi_enable_firmware_logs(winc1500_t *dev, uint8 u8Enable);
   /**@}*/
  /** @defgroup WifiSetBatteryVoltage m2m_wifi_set_battery_voltage
 *   @ingroup WLANAPI
@@ -2777,7 +2777,7 @@ sint8 m2m_wifi_enable_firmware_logs(uint8 u8Enable);
 @sa       		m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-sint8 m2m_wifi_set_battery_voltage(uint16 u16BattVoltx100);
+sint8 m2m_wifi_set_battery_voltage(winc1500_t *dev, uint16 u16BattVoltx100);
   /**@}*/
  /** @defgroup WifiSetGains m2m_wifi_set_gains
 *   @ingroup WLANAPI
@@ -2793,7 +2793,7 @@ sint8 m2m_wifi_set_battery_voltage(uint16 u16BattVoltx100);
 @sa       		m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-sint8 m2m_wifi_set_gains(tstrM2mWifiGainsParams* pstrM2mGain);
+sint8 m2m_wifi_set_gains(winc1500_t *dev, tstrM2mWifiGainsParams* pstrM2mGain);
  /**@}*/
 /** @defgroup WifiGetFirmwareVersion m2m_wifi_get_firmware_version
 *   @ingroup WLANAPI
@@ -2808,7 +2808,7 @@ sint8 m2m_wifi_set_gains(tstrM2mWifiGainsParams* pstrM2mGain);
 @sa       		m2m_wifi_init
 @return		The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
 */
-sint8 m2m_wifi_get_firmware_version(tstrM2mRev *pstrRev);
+sint8 m2m_wifi_get_firmware_version(winc1500_t *dev, tstrM2mRev *pstrRev);
 /**@}*/
 #ifdef ETH_MODE
 /** @defgroup WifiEnableMacMcastFn m2m_wifi_enable_mac_mcast
@@ -2831,7 +2831,7 @@ sint8 m2m_wifi_get_firmware_version(tstrM2mRev *pstrRev);
  * @sa		m2m_wifi_set_receive_buffer, m2m_wifi_send_ethernet_pkt
  * @return       The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_enable_mac_mcast(uint8* pu8MulticastMacAddress, uint8 u8AddRemove);
+NMI_API sint8 m2m_wifi_enable_mac_mcast(winc1500_t *dev, uint8* pu8MulticastMacAddress, uint8 u8AddRemove);
 /**@}*/
 /** @defgroup SetReceiveBufferFn m2m_wifi_set_receive_buffer
  *   @ingroup WLANAPI
@@ -2854,7 +2854,7 @@ NMI_API sint8 m2m_wifi_enable_mac_mcast(uint8* pu8MulticastMacAddress, uint8 u8A
  * @sa		m2m_wifi_enable_mac_mcast,m2m_wifi_send_ethernet_pkt	
  * @return       The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-NMI_API sint8 m2m_wifi_set_receive_buffer(void* pvBuffer,uint16 u16BufferLen);
+NMI_API sint8 m2m_wifi_set_receive_buffer(winc1500_t *dev, void* pvBuffer,uint16 u16BufferLen);
 /**@}*/
 #endif /* ETH_MODE */
 /** @defgroup GetPrngBytes m2m_wifi_prng_get_random_bytes
@@ -2873,7 +2873,7 @@ NMI_API sint8 m2m_wifi_set_receive_buffer(void* pvBuffer,uint16 u16BufferLen);
  *@see  			tstrPrng	
  * @return       	The function returns @ref M2M_SUCCESS for successful operations and a negative value otherwise.
  */
-sint8 m2m_wifi_prng_get_random_bytes(uint8 * pu8PrngBuff,uint16 u16PrngSize);
+sint8 m2m_wifi_prng_get_random_bytes(winc1500_t *dev, uint8 * pu8PrngBuff,uint16 u16PrngSize);
 /**@}*/
 #ifdef __cplusplus
 }

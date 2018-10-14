@@ -225,7 +225,7 @@ FUNCTION PROTOTYPES
 @sa
 	tstrPerphInitParam
 */
-NMI_API sint8 m2m_periph_init(tstrPerphInitParam * param);
+NMI_API sint8 m2m_periph_init(winc1500_t *dev, tstrPerphInitParam * param);
 
 /*!
 @fn	\
@@ -246,7 +246,7 @@ NMI_API sint8 m2m_periph_init(tstrPerphInitParam * param);
 @sa
 	tenuGpioNum
 */
-NMI_API sint8 m2m_periph_gpio_set_dir(uint8 u8GpioNum, uint8 u8GpioDir);
+NMI_API sint8 m2m_periph_gpio_set_dir(winc1500_t *dev, uint8 u8GpioNum, uint8 u8GpioDir);
 
 /*!
 @fn	\
@@ -267,7 +267,7 @@ NMI_API sint8 m2m_periph_gpio_set_dir(uint8 u8GpioNum, uint8 u8GpioDir);
 @sa
 	tenuGpioNum
 */
-NMI_API sint8 m2m_periph_gpio_set_val(uint8 u8GpioNum, uint8 u8GpioVal);
+NMI_API sint8 m2m_periph_gpio_set_val(winc1500_t *dev, uint8 u8GpioNum, uint8 u8GpioVal);
 
 /*!
 @fn	\
@@ -288,7 +288,7 @@ NMI_API sint8 m2m_periph_gpio_set_val(uint8 u8GpioNum, uint8 u8GpioVal);
 @sa
 	tenuGpioNum
 */
-NMI_API sint8 m2m_periph_gpio_get_val(uint8 u8GpioNum, uint8 * pu8GpioVal);
+NMI_API sint8 m2m_periph_gpio_get_val(winc1500_t *dev, uint8 u8GpioNum, uint8 * pu8GpioVal);
 
 /*!
 @fn	\
@@ -309,7 +309,7 @@ NMI_API sint8 m2m_periph_gpio_get_val(uint8 u8GpioNum, uint8 * pu8GpioVal);
 @sa
 	tenuGpioNum
 */
-NMI_API sint8 m2m_periph_gpio_pullup_ctrl(uint8 u8GpioNum, uint8 u8PullupEn);
+NMI_API sint8 m2m_periph_gpio_pullup_ctrl(winc1500_t *dev, uint8 u8GpioNum, uint8 u8PullupEn);
 
 /*!
 @fn	\
@@ -327,7 +327,7 @@ NMI_API sint8 m2m_periph_gpio_pullup_ctrl(uint8 u8GpioNum, uint8 u8PullupEn);
 @sa
 	tstrI2cMasterInitParam
 */
-NMI_API sint8 m2m_periph_i2c_master_init(tstrI2cMasterInitParam * param);
+NMI_API sint8 m2m_periph_i2c_master_init(winc1500_t *dev, tstrI2cMasterInitParam * param);
 
 /*!
 @fn	\
@@ -351,7 +351,7 @@ NMI_API sint8 m2m_periph_i2c_master_init(tstrI2cMasterInitParam * param);
 @sa
 	tenuI2cMasterFlags
 */
-NMI_API sint8 m2m_periph_i2c_master_write(uint8 u8SlaveAddr, uint8 * pu8Buf, uint16 u16BufLen, uint8 flags);
+NMI_API sint8 m2m_periph_i2c_master_write(winc1500_t *dev, uint8 u8SlaveAddr, uint8 * pu8Buf, uint16 u16BufLen, uint8 flags);
 
 
 /*!
@@ -378,7 +378,7 @@ NMI_API sint8 m2m_periph_i2c_master_write(uint8 u8SlaveAddr, uint8 * pu8Buf, uin
 @sa
 	tenuI2cMasterFlags
 */
-NMI_API sint8 m2m_periph_i2c_master_read(uint8 u8SlaveAddr, uint8 * pu8Buf, uint16 u16BufLen, uint16 * pu16ReadLen, uint8 flags);
+NMI_API sint8 m2m_periph_i2c_master_read(winc1500_t *dev, uint8 u8SlaveAddr, uint8 * pu8Buf, uint16 u16BufLen, uint16 * pu16ReadLen, uint8 flags);
 
 
 /*!
@@ -401,7 +401,7 @@ NMI_API sint8 m2m_periph_i2c_master_read(uint8 u8SlaveAddr, uint8 * pu8Buf, uint
 @sa
 	tenuPullupMask
 */
-NMI_API sint8 m2m_periph_pullup_ctrl(uint32 pinmask, uint8 enable);
+NMI_API sint8 m2m_periph_pullup_ctrl(winc1500_t *dev, uint32 pinmask, uint8 enable);
 
 #ifdef __cplusplus
 }

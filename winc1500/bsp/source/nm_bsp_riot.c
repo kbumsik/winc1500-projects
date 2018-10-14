@@ -43,24 +43,23 @@
 #include "periph/gpio.h"
 #include "xtimer.h"
 
-#include "bsp/include/nm_bsp.h"
-#include "common/include/nm_common.h"
-
 #include "winc1500.h"
 #include "winc1500_internal.h"
 #include "conf_winc.h"
 
-static tpfNmBspIsr gpfIsr;
+#include "bsp/include/nm_bsp.h"
+#include "common/include/nm_common.h"
 
-static void chip_isr(void *args)
+static void chip_isr(void *arg)
 {
-	if (gpfIsr) {
-#if	defined(MODULE_WINC1500) && defined(MODULE_NETDEV_ETH)
-		gpfIsr(args);
-#else
-		(void)args;
+	winc1500_t *dev = (winc1500_t *)arg;
+	winc1500_internal_t *internal = &dev->internal;
 
-		gpfIsr();
+	if (internal->gpfIsr) {
+#if	defined(MODULE_WINC1500) && defined(MODULE_NETDEV_ETH)
+		internal->gpfIsr(arg);
+#else
+		internal->gpfIsr(arg);
 #endif
 	}
 }
@@ -69,9 +68,8 @@ static void chip_isr(void *args)
  *	@fn		init_chip_pins
  *	@brief	Initialize reset, chip enable and wake pin
  */
-static void init_chip_pins(void)
+static void init_chip_pins(winc1500_t *dev)
 {
-    winc1500_t *dev = &winc1500;
 	/* Configure INTN pins as input. */ // TODO: Delete?
 	gpio_init(dev->params.int_pin, GPIO_IN);
 
@@ -93,15 +91,17 @@ static void init_chip_pins(void)
  *	@brief	Initialize BSP
  *	@return	0 in case of success and -1 in case of failure
  */
-int8_t nm_bsp_init(void)
+int8_t nm_bsp_init(winc1500_t *dev)
 {
-	gpfIsr = NULL;
+	winc1500_internal_t *internal = &dev->internal;
+
+	internal->gpfIsr = NULL;
 
 	/* Initialize chip IOs. */
-	init_chip_pins();
+	init_chip_pins(dev);
 
 	/* Perform chip reset. */
-	nm_bsp_reset();
+	nm_bsp_reset(dev);
 
 	return M2M_SUCCESS;
 }
@@ -111,9 +111,8 @@ int8_t nm_bsp_init(void)
  *	@brief	De-iInitialize BSP
  *	@return	0 in case of success and -1 in case of failure
  */
-int8_t nm_bsp_deinit(void)
+int8_t nm_bsp_deinit(winc1500_t *dev)
 {
-    winc1500_t *dev = &winc1500;
 	/* Configure control pins as input no pull up. */
 	gpio_clear(dev->params.reset_pin);
 	gpio_init(dev->params.reset_pin, GPIO_IN);
@@ -130,9 +129,8 @@ int8_t nm_bsp_deinit(void)
  *	@brief	Reset NMC1500 SoC by setting CHIP_EN and RESET_N signals low,
  *           CHIP_EN high then RESET_N high
  */
-void nm_bsp_reset(void)
+void nm_bsp_reset(winc1500_t *dev)
 {
-    winc1500_t *dev = &winc1500;
 	if (dev->params.en_pin != GPIO_UNDEF) {
 		gpio_clear(dev->params.en_pin);
 	}
@@ -165,10 +163,11 @@ void nm_bsp_sleep(uint32_t u32TimeMsec)
  *	@param[IN]	pfIsr
  *				Pointer to ISR handler
  */
-void nm_bsp_register_isr(tpfNmBspIsr pfIsr)
+void nm_bsp_register_isr(winc1500_t *dev, tpfNmBspIsr pfIsr)
 {
-    winc1500_t *dev = &winc1500;
-	gpfIsr = pfIsr;
+	winc1500_internal_t *internal = &dev->internal;
+
+	internal->gpfIsr = pfIsr;
 	gpio_init_int(dev->params.int_pin, GPIO_IN, GPIO_FALLING, chip_isr, dev);
 }
 
@@ -178,9 +177,8 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr)
  *	@param[IN]	u8Enable
  *				'0' disable interrupts. '1' enable interrupts
  */
-void nm_bsp_interrupt_ctrl(uint8_t u8Enable)
+void nm_bsp_interrupt_ctrl(winc1500_t *dev, uint8_t u8Enable)
 {
-    winc1500_t *dev = &winc1500;
 	if (u8Enable) {
 		gpio_irq_enable(dev->params.int_pin);
 	} else {

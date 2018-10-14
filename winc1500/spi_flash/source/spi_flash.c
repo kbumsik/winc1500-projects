@@ -92,7 +92,7 @@ SPI Flash DMA
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_read_status_reg(uint8 * val)
+static sint8 spi_flash_read_status_reg(winc1500_t *dev, uint8 * val)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint8 cmd[1];
@@ -100,19 +100,19 @@ static sint8 spi_flash_read_status_reg(uint8 * val)
 
 	cmd[0] = 0x05;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 4);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 4);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&reg);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&reg);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(reg != 1);
 
-	reg = (M2M_SUCCESS == ret)?(nm_read_reg(DUMMY_REGISTER)):(0);
+	reg = (M2M_SUCCESS == ret)?(nm_read_reg(dev, DUMMY_REGISTER)):(0);
 	*val = (uint8)(reg & 0xff);
 	return ret;
 }
@@ -126,7 +126,7 @@ static sint8 spi_flash_read_status_reg(uint8 * val)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static uint8 spi_flash_read_security_reg(void)
+static uint8 spi_flash_read_security_reg(winc1500_t *dev)
 {
 	uint8	cmd[1];
 	uint32	reg;
@@ -134,18 +134,18 @@ static uint8 spi_flash_read_security_reg(void)
 
 	cmd[0] = 0x2b;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 1);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 1);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&reg);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&reg);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(reg != 1);
-	reg = (M2M_SUCCESS == ret)?(nm_read_reg(DUMMY_REGISTER)):(0);
+	reg = (M2M_SUCCESS == ret)?(nm_read_reg(dev, DUMMY_REGISTER)):(0);
 
 	return (sint8)reg & 0xff;
 }
@@ -157,7 +157,7 @@ static uint8 spi_flash_read_security_reg(void)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_gang_unblock(void)
+static sint8 spi_flash_gang_unblock(winc1500_t *dev)
 {
 	uint8	cmd[1];
 	uint32	val	= 0;
@@ -165,14 +165,14 @@ static sint8 spi_flash_gang_unblock(void)
 
 	cmd[0] = 0x98;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -187,7 +187,7 @@ static sint8 spi_flash_gang_unblock(void)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_clear_security_flags(void)
+static sint8 spi_flash_clear_security_flags(winc1500_t *dev)
 {
 	uint8 cmd[1];
 	uint32	val	= 0;
@@ -195,14 +195,14 @@ static sint8 spi_flash_clear_security_flags(void)
 
 	cmd[0] = 0x30;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -225,7 +225,7 @@ static sint8 spi_flash_clear_security_flags(void)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_load_to_cortus_mem(uint32 u32MemAdr, uint32 u32FlashAdr, uint32 u32Sz)
+static sint8 spi_flash_load_to_cortus_mem(winc1500_t *dev, uint32 u32MemAdr, uint32 u32FlashAdr, uint32 u32Sz)
 {
 	uint8 cmd[5];
 	uint32	val	= 0;
@@ -237,15 +237,15 @@ static sint8 spi_flash_load_to_cortus_mem(uint32 u32MemAdr, uint32 u32FlashAdr, 
 	cmd[3] = (uint8)(u32FlashAdr);
 	cmd[4] = 0xA5;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, u32Sz);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
-	ret += nm_write_reg(SPI_FLASH_BUF2, cmd[4]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x1f);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, u32MemAdr);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 5 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, u32Sz);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
+	ret += nm_write_reg(dev, SPI_FLASH_BUF2, cmd[4]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x1f);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, u32MemAdr);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 5 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -263,7 +263,7 @@ static sint8 spi_flash_load_to_cortus_mem(uint32 u32MemAdr, uint32 u32FlashAdr, 
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_sector_erase(uint32 u32FlashAdr)
+static sint8 spi_flash_sector_erase(winc1500_t *dev, uint32 u32FlashAdr)
 {
 	uint8 cmd[4];
 	uint32	val	= 0;
@@ -274,14 +274,14 @@ static sint8 spi_flash_sector_erase(uint32 u32FlashAdr)
 	cmd[2] = (uint8)(u32FlashAdr >> 8);
 	cmd[3] = (uint8)(u32FlashAdr);
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x0f);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 4 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x0f);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 4 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -297,7 +297,7 @@ static sint8 spi_flash_sector_erase(uint32 u32FlashAdr)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_write_enable(void)
+static sint8 spi_flash_write_enable(winc1500_t *dev)
 {
 	uint8 cmd[1];
 	uint32	val	= 0;
@@ -305,14 +305,14 @@ static sint8 spi_flash_write_enable(void)
 
 	cmd[0] = 0x06;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -327,21 +327,21 @@ static sint8 spi_flash_write_enable(void)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */
-static sint8 spi_flash_write_disable(void)
+static sint8 spi_flash_write_disable(winc1500_t *dev)
 {
 	uint8 cmd[1];
 	uint32	val	= 0;
 	sint8	ret = M2M_SUCCESS;
 	cmd[0] = 0x04;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x01);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x01);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -362,7 +362,7 @@ static sint8 spi_flash_write_disable(void)
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_page_program(uint32 u32MemAdr, uint32 u32FlashAdr, uint32 u32Sz)
+static sint8 spi_flash_page_program(winc1500_t *dev, uint32 u32MemAdr, uint32 u32FlashAdr, uint32 u32Sz)
 {
 	uint8 cmd[4];
 	uint32	val	= 0;
@@ -373,14 +373,14 @@ static sint8 spi_flash_page_program(uint32 u32MemAdr, uint32 u32FlashAdr, uint32
 	cmd[2] = (uint8)(u32FlashAdr >> 8);
 	cmd[3] = (uint8)(u32FlashAdr);
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x0f);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, u32MemAdr);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 4 | (1<<7) | ((u32Sz & 0xfffff) << 8));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]|(cmd[1]<<8)|(cmd[2]<<16)|(cmd[3]<<24));
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x0f);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, u32MemAdr);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 4 | (1<<7) | ((u32Sz & 0xfffff) << 8));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&val);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&val);
 		if(M2M_SUCCESS != ret) break;
 	}
 	while(val != 1);
@@ -401,13 +401,13 @@ static sint8 spi_flash_page_program(uint32 u32MemAdr, uint32 u32FlashAdr, uint32
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-static sint8 spi_flash_read_internal(uint8 *pu8Buf, uint32 u32Addr, uint32 u32Sz)
+static sint8 spi_flash_read_internal(winc1500_t *dev, uint8 *pu8Buf, uint32 u32Addr, uint32 u32Sz)
 {
 	sint8 ret = M2M_SUCCESS;
 	/* read size must be < 64KB */
-	ret = spi_flash_load_to_cortus_mem(HOST_SHARE_MEM_BASE, u32Addr, u32Sz);
+	ret = spi_flash_load_to_cortus_mem(dev, HOST_SHARE_MEM_BASE, u32Addr, u32Sz);
 	if(M2M_SUCCESS != ret) goto ERR;
-	ret = nm_read_block(HOST_SHARE_MEM_BASE, pu8Buf, u32Sz);
+	ret = nm_read_block(dev, HOST_SHARE_MEM_BASE, pu8Buf, u32Sz);
 ERR:
 	return ret;
 } 
@@ -425,21 +425,21 @@ ERR:
 *	@author		M. Abdelmawla
 *	@version	1.0
 */
-static sint8 spi_flash_pp(uint32 u32Offset, uint8 *pu8Buf, uint16 u16Sz)
+static sint8 spi_flash_pp(winc1500_t *dev, uint32 u32Offset, uint8 *pu8Buf, uint16 u16Sz)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint8 tmp;
-	spi_flash_write_enable();
+	spi_flash_write_enable(dev);
 	/* use shared packet memory as temp mem */
-	ret += nm_write_block(HOST_SHARE_MEM_BASE, pu8Buf, u16Sz);
-	ret += spi_flash_page_program(HOST_SHARE_MEM_BASE, u32Offset, u16Sz);
-	ret += spi_flash_read_status_reg(&tmp);
+	ret += nm_write_block(dev, HOST_SHARE_MEM_BASE, pu8Buf, u16Sz);
+	ret += spi_flash_page_program(dev, HOST_SHARE_MEM_BASE, u32Offset, u16Sz);
+	ret += spi_flash_read_status_reg(dev, &tmp);
 	do
 	{
 		if(ret != M2M_SUCCESS) goto ERR;
-		ret += spi_flash_read_status_reg(&tmp);
+		ret += spi_flash_read_status_reg(dev, &tmp);
 	}while(tmp & 0x01);
-	ret += spi_flash_write_disable();
+	ret += spi_flash_write_disable(dev);
 ERR:
 	return ret;
 }
@@ -451,7 +451,7 @@ ERR:
 *	@author		M.S.M
 *	@version	1.0
 */
-static uint32 spi_flash_rdid(void)
+static uint32 spi_flash_rdid(winc1500_t *dev)
 {
 	unsigned char cmd[1];
 	uint32 reg = 0;
@@ -460,14 +460,14 @@ static uint32 spi_flash_rdid(void)
 
 	cmd[0] = 0x9f;
 
-	ret += nm_write_reg(SPI_FLASH_DATA_CNT, 4);
-	ret += nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	ret += nm_write_reg(SPI_FLASH_BUF_DIR, 0x1);
-	ret += nm_write_reg(SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
-	ret += nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1<<7));
+	ret += nm_write_reg(dev, SPI_FLASH_DATA_CNT, 4);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	ret += nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x1);
+	ret += nm_write_reg(dev, SPI_FLASH_DMA_ADDR, DUMMY_REGISTER);
+	ret += nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1<<7));
 	do
 	{
-		ret += nm_read_reg_with_ret(SPI_FLASH_TR_DONE, (uint32 *)&reg);
+		ret += nm_read_reg_with_ret(dev, SPI_FLASH_TR_DONE, (uint32 *)&reg);
 		if(M2M_SUCCESS != ret) break;
 		if(++cnt > 500)
 		{
@@ -476,7 +476,7 @@ static uint32 spi_flash_rdid(void)
 		}
 	}
 	while(reg != 1);
-	reg = (M2M_SUCCESS == ret)?(nm_read_reg(DUMMY_REGISTER)):(0);
+	reg = (M2M_SUCCESS == ret)?(nm_read_reg(dev, DUMMY_REGISTER)):(0);
 	M2M_PRINT("Flash ID %x \n",(unsigned int)reg);
 	return reg;
 }
@@ -500,33 +500,33 @@ static void spi_flash_unlock(void)
 	}
 }
 #endif
-static void spi_flash_enter_low_power_mode(void) {
+static void spi_flash_enter_low_power_mode(winc1500_t *dev) {
 	volatile unsigned long tmp;
 	unsigned char* cmd = (unsigned char*) &tmp;
 
 	cmd[0] = 0xb9;
 
-	nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	nm_write_reg(SPI_FLASH_BUF_DIR, 0x1);
-	nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	nm_write_reg(SPI_FLASH_CMD_CNT, 1 | (1 << 7));
-	while(nm_read_reg(SPI_FLASH_TR_DONE) != 1);
+	nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x1);
+	nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	nm_write_reg(dev, SPI_FLASH_CMD_CNT, 1 | (1 << 7));
+	while(nm_read_reg(dev, SPI_FLASH_TR_DONE) != 1);
 }
 
 
-static void spi_flash_leave_low_power_mode(void) {
+static void spi_flash_leave_low_power_mode(winc1500_t *dev) {
 	volatile unsigned long tmp;
 	unsigned char* cmd = (unsigned char*) &tmp;
 
 	cmd[0] = 0xab;
 
-	nm_write_reg(SPI_FLASH_DATA_CNT, 0);
-	nm_write_reg(SPI_FLASH_BUF1, cmd[0]);
-	nm_write_reg(SPI_FLASH_BUF_DIR, 0x1);
-	nm_write_reg(SPI_FLASH_DMA_ADDR, 0);
-	nm_write_reg(SPI_FLASH_CMD_CNT,  1 | (1 << 7));
-	while(nm_read_reg(SPI_FLASH_TR_DONE) != 1);
+	nm_write_reg(dev, SPI_FLASH_DATA_CNT, 0);
+	nm_write_reg(dev, SPI_FLASH_BUF1, cmd[0]);
+	nm_write_reg(dev, SPI_FLASH_BUF_DIR, 0x1);
+	nm_write_reg(dev, SPI_FLASH_DMA_ADDR, 0);
+	nm_write_reg(dev, SPI_FLASH_CMD_CNT,  1 | (1 << 7));
+	while(nm_read_reg(dev, SPI_FLASH_TR_DONE) != 1);
 }
 /*********************************************/
 /* GLOBAL FUNCTIONS							 */
@@ -537,30 +537,30 @@ static void spi_flash_leave_low_power_mode(void) {
  *	@author	M. Abdelmawla
  *	@version	1.0
  */
-sint8 spi_flash_enable(uint8 enable)
+sint8 spi_flash_enable(winc1500_t *dev, uint8 enable)
 {
 	sint8 s8Ret = M2M_SUCCESS;
-	if(REV(nmi_get_chipid()) >= REV_3A0) {		
+	if(REV(nmi_get_chipid(dev)) >= REV_3A0) {
 		uint32 u32Val;
 		
 		/* Enable pinmux to SPI flash. */
-		s8Ret = nm_read_reg_with_ret(0x1410, &u32Val);
+		s8Ret = nm_read_reg_with_ret(dev, 0x1410, &u32Val);
 		if(s8Ret != M2M_SUCCESS) {
 			goto ERR1;
 		}
 		/* GPIO15/16/17/18 */
 		u32Val &= ~((0x7777ul) << 12);
 		u32Val |= ((0x1111ul) << 12);
-		nm_write_reg(0x1410, u32Val);
+		nm_write_reg(dev, 0x1410, u32Val);
 		if(enable) {
-			spi_flash_leave_low_power_mode();
+			spi_flash_leave_low_power_mode(dev);
 		} else {
-			spi_flash_enter_low_power_mode();
+			spi_flash_enter_low_power_mode(dev);
 		}
 		/* Disable pinmux to SPI flash to minimize leakage. */
 		u32Val &= ~((0x7777ul) << 12);
 		u32Val |= ((0x0010ul) << 12);
-		nm_write_reg(0x1410, u32Val);
+		nm_write_reg(dev, 0x1410, u32Val);
 	}
 ERR1:
 	return s8Ret;
@@ -579,14 +579,14 @@ ERR1:
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-sint8 spi_flash_read(uint8 *pu8Buf, uint32 u32offset, uint32 u32Sz)
+sint8 spi_flash_read(winc1500_t *dev, uint8 *pu8Buf, uint32 u32offset, uint32 u32Sz)
 {
 	sint8 ret = M2M_SUCCESS;
 	if(u32Sz > FLASH_BLOCK_SIZE)
 	{
 		do
 		{
-			ret = spi_flash_read_internal(pu8Buf, u32offset, FLASH_BLOCK_SIZE);
+			ret = spi_flash_read_internal(dev, pu8Buf, u32offset, FLASH_BLOCK_SIZE);
 			if(M2M_SUCCESS != ret) goto ERR;
 			u32Sz -= FLASH_BLOCK_SIZE;
 			u32offset += FLASH_BLOCK_SIZE;
@@ -594,7 +594,7 @@ sint8 spi_flash_read(uint8 *pu8Buf, uint32 u32offset, uint32 u32Sz)
 		} while(u32Sz > FLASH_BLOCK_SIZE);
 	}
 	
-	ret = spi_flash_read_internal(pu8Buf, u32offset, u32Sz);
+	ret = spi_flash_read_internal(dev, pu8Buf, u32offset, u32Sz);
 
 ERR:
 	return ret;
@@ -613,7 +613,7 @@ ERR:
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-sint8 spi_flash_write(uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz)
+sint8 spi_flash_write(winc1500_t *dev, uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz)
 {
 #ifdef PROFILING
 	uint32 t1 = 0;
@@ -641,7 +641,7 @@ sint8 spi_flash_write(uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz)
 	if (u32off)/*first part of data in the address page*/
 	{
 		u32wsz = u32Blksz - u32off;
-		if(spi_flash_pp(u32Offset, pu8Buf, (uint16)BSP_MIN(u32Sz, u32wsz))!=M2M_SUCCESS)
+		if(spi_flash_pp(dev, u32Offset, pu8Buf, (uint16)BSP_MIN(u32Sz, u32wsz))!=M2M_SUCCESS)
 		{
 			ret = M2M_ERR_FAIL;
 			goto ERR;
@@ -656,7 +656,7 @@ sint8 spi_flash_write(uint8* pu8Buf, uint32 u32Offset, uint32 u32Sz)
 		u32wsz = BSP_MIN(u32Sz, u32Blksz);
 
 		/*write complete page or the remaining data*/
-		if(spi_flash_pp(u32Offset, pu8Buf, (uint16)u32wsz)!=M2M_SUCCESS)
+		if(spi_flash_pp(dev, u32Offset, pu8Buf, (uint16)u32wsz)!=M2M_SUCCESS)
 		{
 			ret = M2M_ERR_FAIL;
 			goto ERR;
@@ -690,7 +690,7 @@ ERR:
 *	@author		M. Abdelmawla
 *	@version	1.0
 */ 
-sint8 spi_flash_erase(uint32 u32Offset, uint32 u32Sz)
+sint8 spi_flash_erase(winc1500_t *dev, uint32 u32Offset, uint32 u32Sz)
 {
 	uint32 i = 0;
 	sint8 ret = M2M_SUCCESS;
@@ -702,14 +702,14 @@ sint8 spi_flash_erase(uint32 u32Offset, uint32 u32Sz)
 	M2M_PRINT("\r\n>Start erasing...\r\n");
 	for(i = u32Offset; i < (u32Sz +u32Offset); i += (16*FLASH_PAGE_SZ))
 	{
-		ret += spi_flash_write_enable();
-		ret += spi_flash_read_status_reg(&tmp);
-		ret += spi_flash_sector_erase(i + 10);
-		ret += spi_flash_read_status_reg(&tmp);
+		ret += spi_flash_write_enable(dev);
+		ret += spi_flash_read_status_reg(dev, &tmp);
+		ret += spi_flash_sector_erase(dev, i + 10);
+		ret += spi_flash_read_status_reg(dev, &tmp);
 		do
 		{
 			if(ret != M2M_SUCCESS) goto ERR;
-			ret += spi_flash_read_status_reg(&tmp);
+			ret += spi_flash_read_status_reg(dev, &tmp);
 		}while(tmp & 0x01);
 		
 	}
@@ -728,14 +728,14 @@ ERR:
 *	@author		M.S.M
 *	@version	1.0
 */
-uint32 spi_flash_get_size(void)
+uint32 spi_flash_get_size(winc1500_t *dev)
 {
 	uint32 u32FlashId = 0, u32FlashPwr = 0;
 	static uint32 gu32InernalFlashSize= 0;
 	
 	if(!gu32InernalFlashSize)
 	{
-		u32FlashId = spi_flash_rdid();//spi_flash_probe();
+		u32FlashId = spi_flash_rdid(dev);//spi_flash_probe();
 		if(u32FlashId != 0xffffffff)
 		{
 			/*flash size is the third byte from the FLASH RDID*/

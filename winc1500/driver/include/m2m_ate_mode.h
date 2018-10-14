@@ -448,7 +448,7 @@ FUNCTION PROTOTYPES
 @see
 	m2m_ate_init_param	
 */
-sint8 m2m_ate_init(void);
+sint8 m2m_ate_init(winc1500_t *dev);
 
 
 /*!
@@ -465,7 +465,7 @@ sint8 m2m_ate_init(void);
 @see
 	m2m_ate_init
 */
-sint8 m2m_ate_init_param(tstrM2mAteInit *pstrInit);
+sint8 m2m_ate_init_param(winc1500_t *dev, tstrM2mAteInit *pstrInit);
 
 /*!
 @fn	\
@@ -477,7 +477,7 @@ sint8 m2m_ate_init_param(tstrM2mAteInit *pstrInit);
 @return
 	The function SHALL return @ref M2M_SUCCESS for success and a negative value otherwise.
 */
-sint8 m2m_ate_deinit(void);
+sint8 m2m_ate_deinit(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -493,7 +493,7 @@ sint8 m2m_ate_deinit(void);
 @see
 	m2m_ate_init
 */
-sint8 m2m_ate_set_fw_state(uint8);
+sint8 m2m_ate_set_fw_state(winc1500_t *dev, uint8);
 
 /*!
 @fn	\
@@ -507,7 +507,7 @@ sint8 m2m_ate_set_fw_state(uint8);
 @see
 	m2m_ate_init, m2m_ate_set_fw_state
 */
-sint8 m2m_ate_get_fw_state(void);
+sint8 m2m_ate_get_fw_state(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -523,7 +523,7 @@ sint8 m2m_ate_get_fw_state(void);
 @see
 	tenuM2mAteTxIndexOfRates
 */
-uint32 m2m_ate_get_tx_rate(uint8);
+uint32 m2m_ate_get_tx_rate(winc1500_t *dev, uint8);
 
 /*!
 @fn	\
@@ -537,7 +537,7 @@ uint32 m2m_ate_get_tx_rate(uint8);
 @see
 	m2m_ate_start_tx, m2m_ate_stop_tx
 */
-sint8 m2m_ate_get_tx_status(void);
+sint8 m2m_ate_get_tx_status(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -553,7 +553,7 @@ sint8 m2m_ate_get_tx_status(void);
 @see
 	m2m_ate_init, m2m_ate_stop_tx, m2m_ate_get_tx_status
 */
-sint8 m2m_ate_start_tx(tstrM2mAteTx *);
+sint8 m2m_ate_start_tx(winc1500_t *dev, tstrM2mAteTx *);
 
 /*!
 @fn	\
@@ -567,7 +567,7 @@ sint8 m2m_ate_start_tx(tstrM2mAteTx *);
 @see
 	m2m_ate_init, m2m_ate_start_tx, m2m_ate_get_tx_status
 */
-sint8 m2m_ate_stop_tx(void);
+sint8 m2m_ate_stop_tx(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -581,7 +581,7 @@ sint8 m2m_ate_stop_tx(void);
 @see
 	m2m_ate_start_rx, m2m_ate_stop_rx
 */
-sint8 m2m_ate_get_rx_status(void);
+sint8 m2m_ate_get_rx_status(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -597,7 +597,7 @@ sint8 m2m_ate_get_rx_status(void);
 @see
 	m2m_ate_init, m2m_ate_stop_rx, m2m_ate_get_rx_status
 */
-sint8 m2m_ate_start_rx(tstrM2mAteRx *);
+sint8 m2m_ate_start_rx(winc1500_t *dev, tstrM2mAteRx *);
 
 /*!
 @fn	\
@@ -611,7 +611,7 @@ sint8 m2m_ate_start_rx(tstrM2mAteRx *);
 @see
 	m2m_ate_init, m2m_ate_start_rx, m2m_ate_get_rx_status
 */
-sint8 m2m_ate_stop_rx(void);
+sint8 m2m_ate_stop_rx(winc1500_t *dev);
 
 /*!
 @fn	\
@@ -627,7 +627,7 @@ sint8 m2m_ate_stop_rx(void);
 @see
 	m2m_ate_init, m2m_ate_start_rx
 */
-sint8 m2m_ate_read_rx_status(tstrM2mAteRxStatus *);
+sint8 m2m_ate_read_rx_status(winc1500_t *dev, tstrM2mAteRxStatus *);
 
 /*!
 @fn	\
@@ -643,7 +643,7 @@ sint8 m2m_ate_read_rx_status(tstrM2mAteRxStatus *);
 @see
 m2m_ate_get_dig_gain, m2m_ate_get_pa_gain,m2m_ate_get_ppa_gain,m2m_ate_get_tot_gain
 */
-sint8 m2m_ate_set_dig_gain(double dGaindB);
+sint8 m2m_ate_set_dig_gain(winc1500_t *dev, double dGaindB);
 
 /*!
 @fn	\
@@ -660,7 +660,7 @@ sint8 m2m_ate_set_dig_gain(double dGaindB);
 @see
 m2m_ate_set_dig_gain, m2m_ate_get_pa_gain,m2m_ate_get_ppa_gain,m2m_ate_get_tot_gain
 */
-sint8 m2m_ate_get_dig_gain(double * dGaindB);
+sint8 m2m_ate_get_dig_gain(winc1500_t *dev, double * dGaindB);
 
 /*!
 @fn	\
@@ -673,7 +673,7 @@ sint8 m2m_ate_get_dig_gain(double * dGaindB);
 		PA gain level allowed (18/15/12/9/6/3/0 only)
 
 */
-void m2m_ate_set_pa_gain(uint8 gain_db);
+void m2m_ate_set_pa_gain(winc1500_t *dev, uint8 gain_db);
 /*!
 @fn	\
 	sint8 m2m_ate_get_pa_gain(double *paGaindB)
@@ -688,7 +688,7 @@ void m2m_ate_set_pa_gain(uint8 gain_db);
 @see
 m2m_ate_set_dig_gain, m2m_ate_get_dig_gain,m2m_ate_get_ppa_gain,m2m_ate_get_tot_gain
 */
-sint8 m2m_ate_get_pa_gain(double *paGaindB);
+sint8 m2m_ate_get_pa_gain(winc1500_t *dev, double *paGaindB);
 
 /*!
 @fn	\
@@ -704,7 +704,7 @@ sint8 m2m_ate_get_pa_gain(double *paGaindB);
 @see
 m2m_ate_set_dig_gain, m2m_ate_get_dig_gain,m2m_ate_get_pa_gain,m2m_ate_get_tot_gain
 */
-sint8 m2m_ate_get_ppa_gain(double * ppaGaindB);
+sint8 m2m_ate_get_ppa_gain(winc1500_t *dev, double * ppaGaindB);
 
 /*!
 @fn	\
@@ -720,7 +720,7 @@ sint8 m2m_ate_get_ppa_gain(double * ppaGaindB);
 @see
 m2m_ate_set_dig_gain, m2m_ate_get_dig_gain,m2m_ate_get_pa_gain,m2m_ate_get_ppa_gain
 */
-sint8 m2m_ate_get_tot_gain(double * totGaindB);
+sint8 m2m_ate_get_tot_gain(winc1500_t *dev, double * totGaindB);
    //@}
 	
 #ifdef __cplusplus

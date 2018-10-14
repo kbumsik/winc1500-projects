@@ -83,7 +83,7 @@ typedef struct {
 *			    pointer holds address of structure "tstrM2mRev" that contains the firmware version parameters
 *	@version	1.0
 */
-sint8 nm_get_firmware_info(tstrM2mRev* M2mRev);
+sint8 nm_get_firmware_info(winc1500_t *dev, tstrM2mRev* M2mRev);
 /**
 *	@fn		nm_get_firmware_full_info(tstrM2mRev* pstrRev)
 *	@brief	Get Firmware version info
@@ -91,7 +91,7 @@ sint8 nm_get_firmware_info(tstrM2mRev* M2mRev);
 *			    pointer holds address of structure "tstrM2mRev" that contains the firmware version parameters
 *	@version	1.0
 */
-sint8 nm_get_firmware_full_info(tstrM2mRev* pstrRev);
+sint8 nm_get_firmware_full_info(winc1500_t *dev, tstrM2mRev* pstrRev);
 /**
 *	@fn		nm_get_ota_firmware_info(tstrM2mRev* pstrRev)
 *	@brief	Get Firmware version info
@@ -100,13 +100,13 @@ sint8 nm_get_firmware_full_info(tstrM2mRev* pstrRev);
 			
 *	@version	1.0
 */
-sint8 nm_get_ota_firmware_info(tstrM2mRev* pstrRev);
+sint8 nm_get_ota_firmware_info(winc1500_t *dev, tstrM2mRev* pstrRev);
 /*
 *	@fn		nm_drv_init
 *	@brief	Initialize NMC1000 driver
 *	@return	ZERO in case of success and Negative error code in case of failure
 */
-sint8 nm_drv_init_download_mode(void);
+sint8 nm_drv_init_download_mode(winc1500_t *dev);
 
 /*
 *	@fn		nm_drv_init
@@ -117,7 +117,7 @@ sint8 nm_drv_init_download_mode(void);
 *	@return	ZERO in case of success and Negative error code in case of failure
 
 */
-sint8 nm_drv_init(void * arg);
+sint8 nm_drv_init(winc1500_t *dev, void * arg);
 
 /**
 *	@fn		nm_drv_deinit
@@ -127,7 +127,7 @@ sint8 nm_drv_init(void * arg);
 *				Generic argument TBD
 *	@return	ZERO in case of success and Negative error code in case of failure
 */
-sint8 nm_drv_deinit(void * arg);
+sint8 nm_drv_deinit(winc1500_t *dev, void * arg);
 
 #ifdef __cplusplus
 	 }
